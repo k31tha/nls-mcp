@@ -1,0 +1,29 @@
+{
+  "name": "mcp-typescript-project",
+  "version": "3.0.0",
+  "description": "MCP architecture demo using the official @modelcontextprotocol/sdk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start:server": "node build/server/calculator.js",
+    "start:host": "node build/host/app.js",
+    "dev:server": "tsx src/server/calculator.ts",
+    "dev:server:weather": "tsx src/server/weather.ts",
+    "dev:host": "tsx src/host/app.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^17.2.4",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
