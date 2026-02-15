@@ -21,6 +21,7 @@
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 export interface ToolInfo {
   name: string;
@@ -32,7 +33,7 @@ export interface ToolInfo {
 
 export class McpGateway {
   private client: Client;
-  private transport: StdioClientTransport | null = null;
+  private transport: StdioClientTransport | StreamableHTTPClientTransport | null = null;
 
   constructor() {
     this.client = new Client({
@@ -46,6 +47,14 @@ export class McpGateway {
    */
   async connect(command: string, args: string[]): Promise<void> {
     this.transport = new StdioClientTransport({ command, args });
+    await this.client.connect(this.transport);
+  }
+
+  /**
+   * Connect to an MCP server over Streamable HTTP.
+   */
+  async connectHttp(url: string): Promise<void> {
+    this.transport = new StreamableHTTPClientTransport(new URL(url));
     await this.client.connect(this.transport);
   }
 
@@ -92,6 +101,12 @@ export interface ServerConfig {
   args: string[];
 }
 
+export interface HttpServerConfig {
+  /** Friendly name used in logs and error messages. */
+  name: string;
+  url: string;
+}
+
 /**
  * Manages multiple MCP server connections behind a single interface.
  *
@@ -107,12 +122,30 @@ export class MultiServerGateway {
   private toolRoutes = new Map<string, string>();
 
   /**
-   * Add and connect to a server.  Tools are discovered immediately so
-   * that `callTool` can route to the correct gateway.
+   * Add and connect to a server via stdio (child process).
+   * Tools are discovered immediately so that `callTool` can route
+   * to the correct gateway.
    */
   async addServer(config: ServerConfig): Promise<ToolInfo[]> {
     const gw = new McpGateway();
     await gw.connect(config.command, config.args);
+    this.gateways.set(config.name, gw);
+
+    const tools = await gw.listTools();
+    for (const tool of tools) {
+      this.toolRoutes.set(tool.name, config.name);
+    }
+    return tools;
+  }
+
+  /**
+   * Add and connect to a server via Streamable HTTP.
+   * Tools are discovered immediately so that `callTool` can route
+   * to the correct gateway.
+   */
+  async addHttpServer(config: HttpServerConfig): Promise<ToolInfo[]> {
+    const gw = new McpGateway();
+    await gw.connectHttp(config.url);
     this.gateways.set(config.name, gw);
 
     const tools = await gw.listTools();

@@ -50,6 +50,7 @@ export class Agent {
   private tools: ToolInfo[] = [];
   private anthropic: Anthropic | null = null;
   private model = "claude-sonnet-4-20250514";
+  private conversationHistory: MessageParam[] = [];
 
   constructor(gateway: MultiServerGateway) {
     this.gateway = gateway;
@@ -71,6 +72,10 @@ export class Agent {
     return this.anthropic !== null;
   }
 
+  clearHistory(): void {
+    this.conversationHistory = [];
+  }
+
   async processMessage(userMessage: string): Promise<AgentResponse> {
     if (this.anthropic) {
       return this.processWithLLM(userMessage);
@@ -90,10 +95,9 @@ export class Agent {
       input_schema: t.inputSchema as Tool["input_schema"],
     }));
 
-    // Start the conversation
-    const messages: MessageParam[] = [
-      { role: "user", content: userMessage },
-    ];
+    // Append to conversation history
+    this.conversationHistory.push({ role: "user", content: userMessage });
+    const messages = this.conversationHistory;
 
     // Tool-use loop: keep going until Claude gives a final text answer
     let response = await this.anthropic!.messages.create({
@@ -142,6 +146,9 @@ export class Agent {
       });
     }
 
+    // Preserve the final assistant response in history
+    messages.push({ role: "assistant", content: response.content });
+
     // Extract final text answer
     const textBlocks = response.content.filter(
       (b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text",
@@ -149,9 +156,10 @@ export class Agent {
     const answer = textBlocks.map((b) => b.text).join("\n");
 
     return {
-      thinking: toolCalls.length > 0
-        ? `Used ${toolCalls.length} tool(s) to answer.`
-        : "Answered without tools.",
+      thinking:
+        toolCalls.length > 0
+          ? `Used ${toolCalls.length} tool(s) to answer.`
+          : "Answered without tools.",
       toolCalls,
       answer,
     };
@@ -159,22 +167,38 @@ export class Agent {
 
   // ── Keyword fallback (no API key) ─────────────────────────
 
-  private async processWithKeywords(userMessage: string): Promise<AgentResponse> {
+  private async processWithKeywords(
+    userMessage: string,
+  ): Promise<AgentResponse> {
     const toolCalls: AgentResponse["toolCalls"] = [];
     const msg = userMessage.toLowerCase();
 
     if (msg.includes("weather")) {
       const location = extractQuoted(userMessage) ?? "London";
-      const result = await this.gateway.callTool("get_weather", { location });
-      toolCalls.push({ tool: "get_weather", args: { location }, result });
-      return { thinking: `Keyword match → get_weather("${location}")`, toolCalls, answer: result };
+      const result = await this.gateway.callTool("get_weather", {
+        location,
+      });
+      toolCalls.push({
+        tool: "get_weather",
+        args: { location },
+        result,
+      });
+      return {
+        thinking: `Keyword match → get_weather("${location}")`,
+        toolCalls,
+        answer: result,
+      };
     }
 
     if (msg.includes("calculate") || msg.includes("eval")) {
       const expression = extractQuoted(userMessage) ?? userMessage;
       const result = await this.gateway.callTool("calculate", { expression });
       toolCalls.push({ tool: "calculate", args: { expression }, result });
-      return { thinking: `Keyword match → calculate("${expression}")`, toolCalls, answer: result };
+      return {
+        thinking: `Keyword match → calculate("${expression}")`,
+        toolCalls,
+        answer: result,
+      };
     }
 
     if (msg.includes("add") || msg.includes("+")) {
@@ -183,7 +207,11 @@ export class Agent {
         const [a, b] = nums;
         const result = await this.gateway.callTool("add", { a, b });
         toolCalls.push({ tool: "add", args: { a, b }, result });
-        return { thinking: `Keyword match → add(${a}, ${b})`, toolCalls, answer: `${a} + ${b} = ${result}` };
+        return {
+          thinking: `Keyword match → add(${a}, ${b})`,
+          toolCalls,
+          answer: `${a} + ${b} = ${result}`,
+        };
       }
     }
 
@@ -193,7 +221,11 @@ export class Agent {
         const [a, b] = nums;
         const result = await this.gateway.callTool("multiply", { a, b });
         toolCalls.push({ tool: "multiply", args: { a, b }, result });
-        return { thinking: `Keyword match → multiply(${a}, ${b})`, toolCalls, answer: `${a} * ${b} = ${result}` };
+        return {
+          thinking: `Keyword match → multiply(${a}, ${b})`,
+          toolCalls,
+          answer: `${a} * ${b} = ${result}`,
+        };
       }
     }
 

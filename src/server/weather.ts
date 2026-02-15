@@ -9,32 +9,17 @@
  * protocol over stdio.
  */
 
+import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
+import { registerWeatherTools } from "./tools/weather-tools.js";
 
 const server = new McpServer({
   name: "weather",
   version: "1.0.0",
 });
 
-server.registerTool(
-  "get_weather",
-  {
-    description: "Get the current weather for a location",
-    inputSchema: {
-      location: z.string().describe("City or location name, e.g. 'London'"),
-    },
-  },
-  async ({ location }) => ({
-    content: [
-      {
-        type: "text",
-        text: `Weather in ${location}: 22°C, partly cloudy with light winds`,
-      },
-    ],
-  }),
-);
+registerWeatherTools(server);
 
 async function main() {
   const transport = new StdioServerTransport();

@@ -21,13 +21,20 @@
  *       ├── Client 1 ◄──stdio──► calculator server
  *       └── Client 2 ◄──stdio──► weather server
  *
+ * Flags:
+ *   --http  Connect to servers via HTTP (requires `pnpm dev:server:http` running)
+ *
  * Environment:
- *   ANTHROPIC_API_KEY — set in .env to enable LLM mode (loaded via dotenv)
+ *   ANTHROPIC_API_KEY  — set in .env to enable LLM mode (loaded via dotenv)
+ *   MCP_TRANSPORT=http — alternative to --http flag
  */
 
 import "dotenv/config";
 import { MultiServerGateway } from "../client/gateway.js";
 import { Agent } from "../agent/agent.js";
+
+const useHttp =
+  process.argv.includes("--http") || process.env.MCP_TRANSPORT === "http";
 
 function serverPath(name: string): { command: string; args: string[] } {
   const isTs = import.meta.url.endsWith(".ts");
@@ -43,17 +50,35 @@ async function main() {
   console.log("=".repeat(60));
   console.log();
 
+  const mode = useHttp ? "HTTP" : "stdio";
+  console.log(`[Host] Transport mode: ${mode}`);
+
   // ── Host: set up infrastructure ───────────────────────────
   console.log("[Host] Setting up MCP Gateway...");
   const gateway = new MultiServerGateway();
 
-  const calc = serverPath("calculator");
-  await gateway.addServer({ name: "calculator", ...calc });
-  console.log("[Host] Calculator server connected.");
+  if (useHttp) {
+    const baseUrl = process.env.MCP_HTTP_BASE_URL ?? "http://localhost:3000";
+    await gateway.addHttpServer({
+      name: "calculator",
+      url: `${baseUrl}/mcp/calculator`,
+    });
+    console.log("[Host] Calculator server connected (HTTP).");
 
-  const weather = serverPath("weather");
-  await gateway.addServer({ name: "weather", ...weather });
-  console.log("[Host] Weather server connected.");
+    await gateway.addHttpServer({
+      name: "weather",
+      url: `${baseUrl}/mcp/weather`,
+    });
+    console.log("[Host] Weather server connected (HTTP).");
+  } else {
+    const calc = serverPath("calculator");
+    await gateway.addServer({ name: "calculator", ...calc });
+    console.log("[Host] Calculator server connected.");
+
+    const weather = serverPath("weather");
+    await gateway.addServer({ name: "weather", ...weather });
+    console.log("[Host] Weather server connected.");
+  }
 
   // ── Host: create and initialise the Agent ─────────────────
   console.log("[Host] Creating Agent...");
