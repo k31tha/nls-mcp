@@ -36,6 +36,12 @@ await gateway.addHttpServer({
 });
 console.log("[API] Weather server connected.");
 
+await gateway.addHttpServer({
+  name: "nls",
+  url: `${baseUrl}/mcp/nls`,
+});
+console.log("[API] NLS server connected.");
+
 const agent = new Agent(gateway);
 await agent.initialize();
 

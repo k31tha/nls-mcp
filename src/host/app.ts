@@ -70,6 +70,12 @@ async function main() {
       url: `${baseUrl}/mcp/weather`,
     });
     console.log("[Host] Weather server connected (HTTP).");
+
+    await gateway.addHttpServer({
+      name: "nls",
+      url: `${baseUrl}/mcp/nls`,
+    });
+    console.log("[Host] NLS server connected (HTTP).");
   } else {
     const calc = serverPath("calculator");
     await gateway.addServer({ name: "calculator", ...calc });
@@ -78,6 +84,10 @@ async function main() {
     const weather = serverPath("weather");
     await gateway.addServer({ name: "weather", ...weather });
     console.log("[Host] Weather server connected.");
+
+    const nls = serverPath("nls");
+    await gateway.addServer({ name: "nls", ...nls });
+    console.log("[Host] NLS server connected.");
   }
 
   // ── Host: create and initialise the Agent ─────────────────
@@ -103,6 +113,7 @@ async function main() {
     "Multiply 8 and 6",
     'Calculate "( 2 + 3 ) * 4 - 1"',
     "What can you do?",
+    "List all active clubs in Non League Social",
   ];
 
   for (const message of userMessages) {

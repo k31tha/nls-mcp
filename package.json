@@ -10,6 +10,7 @@
     "start:host": "node build/host/app.js",
     "dev:server": "tsx src/server/calculator.ts",
     "dev:server:weather": "tsx src/server/weather.ts",
+    "dev:server:nls": "tsx src/server/nls.ts",
     "dev:server:http": "tsx src/server/http.ts",
     "dev:host": "tsx src/host/app.ts",
     "dev:api": "tsx src/api/server.ts",
