@@ -80,4 +80,70 @@ export function registerNlsTools(server: McpServer): void {
       };
     },
   );
+
+  server.registerTool(
+    "club_detail",
+    {
+      description: "Get full details for a club by its URL-friendly name.",
+      inputSchema: {
+        urlFriendlyName: z.string().describe("The URL-friendly name of the club"),
+      },
+    },
+    async ({ urlFriendlyName }) => {
+      try {
+        const response = await fetch(`${NLS_API_BASE}/ClubApi/ClubFullDetail/${urlFriendlyName}`);
+        if (!response.ok) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: API returned ${response.status} ${response.statusText}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        const data = await response.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: fetch failed — ${error}` }],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "club_detail_by_guid",
+    {
+      description: "Get full details for a club by its GUID.",
+      inputSchema: {
+        guid: z.string().describe("The GUID of the club"),
+      },
+    },
+    async ({ guid }) => {
+      try {
+        const response = await fetch(`${NLS_API_BASE}/ClubApi/ClubFullDetailByGuid/${guid}`);
+        if (!response.ok) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: API returned ${response.status} ${response.statusText}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        const data = await response.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: fetch failed — ${error}` }],
+          isError: true,
+        };
+      }
+    },
+  );
 }
