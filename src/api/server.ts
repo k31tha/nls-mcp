@@ -25,18 +25,6 @@ const gateway = new MultiServerGateway();
 const baseUrl = process.env.MCP_HTTP_BASE_URL ?? "http://localhost:3000";
 
 await gateway.addHttpServer({
-  name: "calculator",
-  url: `${baseUrl}/mcp/calculator`,
-});
-console.log("[API] Calculator server connected.");
-
-await gateway.addHttpServer({
-  name: "weather",
-  url: `${baseUrl}/mcp/weather`,
-});
-console.log("[API] Weather server connected.");
-
-await gateway.addHttpServer({
   name: "nls",
   url: `${baseUrl}/mcp/nls`,
 });

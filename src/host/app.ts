@@ -18,8 +18,7 @@
  *   Host (this file)
  *   ├── Agent              (src/agent/agent.ts)   — LLM + tool decisions
  *   └── MultiServerGateway (src/client/gateway.ts) — MCP infrastructure
- *       ├── Client 1 ◄──stdio──► calculator server
- *       └── Client 2 ◄──stdio──► weather server
+ *       └── Client 1 ◄──stdio──► nls server
  *
  * Flags:
  *   --http  Connect to servers via HTTP (requires `pnpm dev:server:http` running)
@@ -60,31 +59,11 @@ async function main() {
   if (useHttp) {
     const baseUrl = process.env.MCP_HTTP_BASE_URL ?? "http://localhost:3000";
     await gateway.addHttpServer({
-      name: "calculator",
-      url: `${baseUrl}/mcp/calculator`,
-    });
-    console.log("[Host] Calculator server connected (HTTP).");
-
-    await gateway.addHttpServer({
-      name: "weather",
-      url: `${baseUrl}/mcp/weather`,
-    });
-    console.log("[Host] Weather server connected (HTTP).");
-
-    await gateway.addHttpServer({
       name: "nls",
       url: `${baseUrl}/mcp/nls`,
     });
     console.log("[Host] NLS server connected (HTTP).");
   } else {
-    const calc = serverPath("calculator");
-    await gateway.addServer({ name: "calculator", ...calc });
-    console.log("[Host] Calculator server connected.");
-
-    const weather = serverPath("weather");
-    await gateway.addServer({ name: "weather", ...weather });
-    console.log("[Host] Weather server connected.");
-
     const nls = serverPath("nls");
     await gateway.addServer({ name: "nls", ...nls });
     console.log("[Host] NLS server connected.");
@@ -108,10 +87,6 @@ async function main() {
 
   // ── Host: send user messages to the Agent ─────────────────
   const userMessages = [
-    'What is the weather in "Tokyo"?',
-    "Add 15 and 27",
-    "Multiply 8 and 6",
-    'Calculate "( 2 + 3 ) * 4 - 1"',
     "What can you do?",
     "List all active clubs in Non League Social",
   ];

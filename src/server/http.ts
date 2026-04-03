@@ -1,11 +1,10 @@
 /**
  * MCP HTTP Server — Express entry point
  *
- * Hosts both MCP servers (calculator, weather) on a single Express app
+ * Hosts the NLS MCP server on a single Express app
  * using the SDK's Streamable HTTP transport with path-based routing:
  *
- *   POST /mcp/calculator  — calculator server
- *   POST /mcp/weather     — weather server
+ *   POST /mcp/nls  — NLS server
  *
  * Runs in stateless mode: each POST creates a fresh transport + server,
  * so no session state is kept between requests.
@@ -16,21 +15,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import type { Request, Response } from "express";
-import { registerCalculatorTools } from "./tools/calculator-tools.js";
-import { registerWeatherTools } from "./tools/weather-tools.js";
 import { registerNlsTools } from "./tools/nls-tools.js";
-
-function createCalculatorServer(): McpServer {
-  const server = new McpServer({ name: "calculator", version: "1.0.0" });
-  registerCalculatorTools(server);
-  return server;
-}
-
-function createWeatherServer(): McpServer {
-  const server = new McpServer({ name: "weather", version: "1.0.0" });
-  registerWeatherTools(server);
-  return server;
-}
 
 function createNlsServer(): McpServer {
   const server = new McpServer({ name: "nls", version: "1.0.0" });
@@ -95,14 +80,10 @@ function mountMcpEndpoint(
 
 const app = createMcpExpressApp();
 
-mountMcpEndpoint(app, "/mcp/calculator", createCalculatorServer);
-mountMcpEndpoint(app, "/mcp/weather", createWeatherServer);
 mountMcpEndpoint(app, "/mcp/nls", createNlsServer);
 
 const PORT = parseInt(process.env.PORT ?? "3000", 10);
 app.listen(PORT, () => {
   console.log(`MCP HTTP Server listening on port ${PORT}`);
-  console.log(`  Calculator: http://localhost:${PORT}/mcp/calculator`);
-  console.log(`  Weather:    http://localhost:${PORT}/mcp/weather`);
-  console.log(`  NLS:        http://localhost:${PORT}/mcp/nls`);
+  console.log(`  NLS: http://localhost:${PORT}/mcp/nls`);
 });

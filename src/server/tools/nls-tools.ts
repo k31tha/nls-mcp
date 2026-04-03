@@ -21,6 +21,7 @@ const ClubSchema = z.object({
 });
 
 const NLS_API_BASE = "https://nonleaguesocial.co.uk/api/v2";
+const NLS_API_BASE_V1 = "https://nonleaguesocial.co.uk/api";
 
 export function registerNlsTools(server: McpServer): void {
   server.registerTool(
@@ -78,6 +79,102 @@ export function registerNlsTools(server: McpServer): void {
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result) }],
       };
+    },
+  );
+
+  server.registerTool(
+    "get_pyramid",
+    {
+      description:
+        "Get the full Non League football pyramid. Returns all leagues/divisions (pyramidStep, leagueName) each with their embedded clubs.",
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        const response = await fetch(`${NLS_API_BASE_V1}/PyramidApi/GetPyramid`);
+        if (!response.ok) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: API returned ${response.status} ${response.statusText}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        const data = await response.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: fetch failed — ${error}` }],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "get_wiki_page",
+    {
+      description: "Get the NLS wiki page for a club or entity by its wiki page ID.",
+      inputSchema: {
+        wikiPageId: z.string().describe("The ID of the NLS wiki page"),
+      },
+    },
+    async ({ wikiPageId }) => {
+      try {
+        const response = await fetch(`${NLS_API_BASE}/WikiPageApi/WikiPage/${wikiPageId}`);
+        if (!response.ok) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: API returned ${response.status} ${response.statusText}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        const data = await response.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: fetch failed — ${error}` }],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  server.registerTool(
+    "get_reference_data",
+    {
+      description: "Get all NLS reference data (lookup values, enumerations, and configuration used across the platform).",
+      inputSchema: {},
+    },
+    async () => {
+      try {
+        const response = await fetch(`${NLS_API_BASE}/ReferenceDataApi/ReferenceData/`);
+        if (!response.ok) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: API returned ${response.status} ${response.statusText}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        const data = await response.json();
+        return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+      } catch (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: fetch failed — ${error}` }],
+          isError: true,
+        };
+      }
     },
   );
 

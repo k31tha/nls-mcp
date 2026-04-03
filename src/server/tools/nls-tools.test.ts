@@ -71,6 +71,171 @@ describe("club_detail", () => {
   });
 });
 
+describe("get_pyramid", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns raw JSON on a successful API response", async () => {
+    const fakePyramid = [{ pyramidId: "1", leagueName: "Northern Premier League", pyramidStep: 4, clubs: [] }];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => fakePyramid,
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_pyramid", arguments: {} });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content).toEqual([{ type: "text", text: JSON.stringify(fakePyramid) }]);
+  });
+
+  it("returns isError with status code on non-OK HTTP response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_pyramid", arguments: {} });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("500");
+  });
+
+  it("returns isError on fetch network failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("network timeout")),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_pyramid", arguments: {} });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("network timeout");
+  });
+});
+
+describe("get_wiki_page", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns raw JSON on a successful API response", async () => {
+    const fakePage = { wikiPageId: "abc-123", content: "Test FC wiki content" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => fakePage,
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_wiki_page", arguments: { wikiPageId: "abc-123" } });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content).toEqual([{ type: "text", text: JSON.stringify(fakePage) }]);
+  });
+
+  it("returns isError with status code on non-OK HTTP response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_wiki_page", arguments: { wikiPageId: "unknown" } });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("404");
+  });
+
+  it("returns isError on fetch network failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("network timeout")),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_wiki_page", arguments: { wikiPageId: "abc-123" } });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("network timeout");
+  });
+});
+
+describe("get_reference_data", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns raw JSON on a successful API response", async () => {
+    const fakeData = [{ id: 1, name: "Some Reference" }];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => fakeData,
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_reference_data", arguments: {} });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content).toEqual([{ type: "text", text: JSON.stringify(fakeData) }]);
+  });
+
+  it("returns isError with status code on non-OK HTTP response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      }),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_reference_data", arguments: {} });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("500");
+  });
+
+  it("returns isError on fetch network failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("network timeout")),
+    );
+
+    const client = await buildClient();
+    const result = await client.callTool({ name: "get_reference_data", arguments: {} });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as { type: string; text: string }).text;
+    expect(text).toContain("network timeout");
+  });
+});
+
 describe("club_detail_by_guid", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
