@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerNlsTools } from "./tools/nls-tools.js";
+import { registerLeagueScraperTools } from "./tools/league-scraper-tools.js";
 
 const server = new McpServer({
   name: "nls",
@@ -8,6 +9,7 @@ const server = new McpServer({
 });
 
 registerNlsTools(server);
+registerLeagueScraperTools(server);
 
 async function main() {
   const transport = new StdioServerTransport();

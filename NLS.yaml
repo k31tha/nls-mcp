@@ -1,0 +1,623 @@
+openapi: 3.0.1
+info:
+  title: NonLeagueSocial API (auto-generated)
+  version: 1.0.0
+  description: Auto-generated OpenAPI spec. Schemas use real models from `NLS.DataContracts` where available.
+servers:
+  - url: https://nonleaguesocial.co.uk
+  - url: http://localhost:5000
+paths:
+  /api/BlogApi/BlogEntryList:
+    get:
+      summary: Get blog entry list
+      responses:
+        "200":
+          description: Array of blog posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlogPostApiEntity"
+  /api/v2/BlogApi/BlogPosts/{searchContext}/{searchValue}/{catPage}/{catPageNo}:
+    get:
+      summary: Get paged/filtered blog posts
+      parameters:
+        - name: searchContext
+          in: path
+          required: false
+          schema:
+            type: string
+        - name: searchValue
+          in: path
+          required: false
+          schema:
+            type: string
+        - name: catPage
+          in: path
+          required: false
+          schema:
+            type: string
+        - name: catPageNo
+          in: path
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paged blog posts
+  /api/BlogApi/BlogEntry/{postId}:
+    get:
+      summary: Get blog entry by ID
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPostApiEntity"
+  /api/v2/BlogApi/BlogPost/{urlFriendlyName}:
+    get:
+      summary: Get blog post by slug
+      parameters:
+        - name: urlFriendlyName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPostApiEntity"
+  /api/BlogApi/CreateBlogEntry:
+    post:
+      summary: Create blog entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Api_BlogPostNewEntry"
+      responses:
+        "201":
+          description: Created
+  /api/ClubApi/ClubSearch/{term}:
+    get:
+      summary: Search clubs by term
+      parameters:
+        - name: term
+          in: path
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of clubs
+  /api/v2/ClubApi/ClubList:
+    get:
+      summary: Get full club list
+      responses:
+        "200":
+          description: Array of ClubEntity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClubEntity"
+  /api/v2/ClubApi/ClubDetail/{urlFriendlyName}:
+    get:
+      summary: Get club detail by URL-friendly name
+      parameters:
+        - name: urlFriendlyName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Club detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubFullEntity"
+  /api/v2/ClubApi/ClubFullDetailByGuid/{guid}:
+    get:
+      summary: Get club full detail by GUID
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Club detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubFullDetails"
+  /api/v2/ClubApi/EditClub:
+    post:
+      summary: Update existing club
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClubEntity"
+      responses:
+        "200":
+          description: Updated club
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClubApiEntity"
+  /api/ClubApi/UpdateLeague:
+    post:
+      summary: Update club league (WikiClubLeague)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WikiClubLeague"
+      responses:
+        "200":
+          description: OK
+  /api/v2/ClubApi/UpdateClubSocial:
+    post:
+      summary: Update club social details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClubSocialApiEntity"
+      responses:
+        "200":
+          description: Updated club social
+  /api/ClubApi/UpdateClubPyramid:
+    post:
+      summary: Update club pyramid assignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClubPyramidEntity"
+      responses:
+        "200":
+          description: OK
+  /api/ClubAsset/SuggestAsset:
+    get:
+      summary: Suggest a club asset
+      responses:
+        "200":
+          description: Suggestions
+    post:
+      summary: Submit a suggested asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Accepted
+  /api/Manage/ChangePassword:
+    post:
+      summary: Change current user's password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+  /api/MissingWikiApi/CreateMissingWiki:
+    post:
+      summary: Create missing wiki entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: OK
+  /api/NLSContentApi/GetContent:
+    get:
+      summary: Get NLS content data
+      responses:
+        "200":
+          description: Content
+  /api/PyramidApi/GetPyramid:
+    get:
+      summary: Get pyramid structure
+      responses:
+        "200":
+          description: Pyramid data
+  /api/v3/PyramidApi/Pyramids:
+    get:
+      summary: Get pyramid data (v3) with optional filters
+      parameters:
+        - name: pyramidId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: leagueName
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: leagueUrl
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pyramidStep
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: wikipedia
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Filtered pyramid data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PyramidLeagueClubEntity"
+  /api/TwitterApi/ProcessTweetQueue:
+    post:
+      summary: Process tweet queue
+      responses:
+        "200":
+          description: OK
+  /api/TwitterApi/AddImmediateTweet:
+    post:
+      summary: Add immediate tweet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwitterImmediate"
+      responses:
+        "200":
+          description: OK
+  /api/v2/WikiPageApi/WikiPage/{name}:
+    get:
+      summary: Get wiki page by name
+      parameters:
+        - name: name
+          in: path
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wiki page
+  /api/v2/WikiPageApi/WikiPageList:
+    get:
+      summary: Get list of wiki pages
+      responses:
+        "200":
+          description: Array of wiki pages
+  /api/v2/WikiPageApi/WikiPageAdd:
+    post:
+      summary: Add a wiki page
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WikiPageApiEntity"
+      responses:
+        "200":
+          description: Created
+  /api/v3/WikiPageApi/WikiPages/{name}:
+    get:
+      summary: Get wiki page by name (v3)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wiki page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WikiPageApiEntity"
+        "404":
+          description: Not found
+    put:
+    post:
+      summary: Update wiki page by name (v3)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WikiPageApiEntity"
+      responses:
+        "200":
+          description: Updated wiki page
+        "400":
+          description: Invalid request
+        "404":
+          description: Not found
+  /api/v3/WikiPageApi/WikiPages:
+    post:
+      summary: Add wiki page (v3)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WikiPageApiEntity"
+      responses:
+        "201":
+          description: Created wiki page
+        "400":
+          description: Invalid request
+components:
+  schemas:
+    ClubEntity:
+      type: object
+      properties:
+        ClubID:
+          type: integer
+        ClubName:
+          type: string
+        ClubAddress:
+          type: string
+        ContactEmailAddr:
+          type: string
+        MainWebsite:
+          type: string
+        LongLat:
+          type: string
+        Source:
+          type: string
+        ClubPostcode:
+          type: string
+        UrlFriendlyName:
+          type: string
+        PyramidId:
+          type: string
+        Nicknames:
+          type: string
+        Active:
+          type: boolean
+          nullable: true
+        ClubGuid:
+          type: string
+          format: uuid
+          nullable: true
+        MinorClub:
+          type: boolean
+          nullable: true
+        DisableAutoUpdate:
+          type: boolean
+          nullable: true
+        StatusTypeId:
+          type: integer
+          nullable: true
+    ClubApiEntity:
+      type: object
+      properties:
+        ClubID:
+          type: integer
+        ClubName:
+          type: string
+        ClubAddress:
+          type: string
+        ContactEmailAddr:
+          type: string
+        MainWebsite:
+          type: string
+        LongLat:
+          type: string
+        Source:
+          type: string
+        ClubPostcode:
+          type: string
+        UrlFriendlyName:
+          type: string
+        PyramidId:
+          type: string
+        Nicknames:
+          type: string
+        Active:
+          type: boolean
+          nullable: true
+        ClubGuid:
+          type: string
+          format: uuid
+          nullable: true
+        MinorClub:
+          type: boolean
+          nullable: true
+        DisableAutoUpdate:
+          type: boolean
+          nullable: true
+        StatusTypeId:
+          type: integer
+          nullable: true
+        fluentErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FluentErrorEntity"
+    FluentErrorEntity:
+      type: object
+      properties:
+        ErrorMessage:
+          type: string
+        PropertyName:
+          type: string
+    ClubSocialApiEntity:
+      type: object
+      properties:
+        ClubSocialID:
+          type: integer
+        SocialMedia_SocialMediaID:
+          type: integer
+        SocialURL:
+          type: string
+        SocialName:
+          type: string
+        OwnerType:
+          type: string
+        Active:
+          type: boolean
+          nullable: true
+        Club_ClubID:
+          type: integer
+        ClubGuid:
+          type: string
+        fluentErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FluentErrorEntity"
+    ClubPyramidEntity:
+      type: object
+      properties:
+        pyramidId:
+          type: integer
+          nullable: true
+        clubId:
+          type: integer
+    WikiClubLeague:
+      type: object
+      properties:
+        ClubWikiLink:
+          type: string
+        ClubWikiLeague:
+          type: string
+        ClubWikiLeagueSection:
+          type: string
+    WikiPageApiEntity:
+      type: object
+      properties:
+        WikiPageID:
+          type: integer
+        WikiPageName:
+          type: string
+        WikiContentBase64:
+          type: string
+        CreatedDate:
+          type: string
+          format: date-time
+          nullable: true
+        ModifiedDate:
+          type: string
+          format: date-time
+          nullable: true
+        fluentErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FluentErrorEntity"
+    Api_BlogPostNewEntry:
+      type: object
+      properties:
+        TemplateName:
+          type: string
+        BlogEntryContent:
+          type: object
+    BlogPostApiEntity:
+      type: object
+      properties:
+        BlogPostID:
+          type: integer
+          nullable: true
+        BlogPostGuid:
+          type: string
+          format: uuid
+          nullable: true
+        Title:
+          type: string
+        Slug:
+          type: string
+        Author:
+          type: string
+        PubDate:
+          type: string
+          format: date-time
+          nullable: true
+        LastModified:
+          type: string
+          format: date-time
+          nullable: true
+        Excerpt:
+          type: string
+        Content:
+          type: string
+        IsPublished:
+          type: boolean
+          nullable: true
+        IsStickyPost:
+          type: boolean
+          nullable: true
+        Categories:
+          type: array
+          items:
+            type: string
+    PyramidLeagueClubEntity:
+      type: object
+      properties:
+        pyramidId:
+          type: integer
+        leagueName:
+          type: string
+        leagueUrl:
+          type: string
+        pyramidStep:
+          type: integer
+        pyramidStepInactive:
+          type: boolean
+        wikipedia:
+          type: string
+        wikiPageSection:
+          type: string
+        clubs:
+          type: array
+          items:
+            type: object
+    TwitterImmediate:
+      type: object
+      properties:
+        tweetMessage:
+          type: string
+      additionalProperties: true
+security: []

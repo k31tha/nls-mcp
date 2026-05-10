@@ -478,7 +478,7 @@ export class Agent {
   private gateway: MultiServerGateway;
   private tools: ToolInfo[] = [];
   private anthropic: Anthropic | null = null;
-  private model = "claude-sonnet-4-20250514";
+  private model = "claude-sonnet-4-6";
   private conversationHistory: MessageParam[] = [];
 
   constructor(gateway: MultiServerGateway) {
@@ -620,7 +620,7 @@ import { Agent } from "../agent/agent.js";
 function serverPath(name: string): { command: string; args: string[] } {
   const isTsx = import.meta.url.endsWith(".ts");
   if (isTsx) {
-    return { command: "npx", args: ["tsx", `src/server/${name}.ts`] };
+    return { command: "tsx", args: [`src/server/${name}.ts`] };
   }
   return { command: "node", args: [`build/server/${name}.js`] };
 }
