@@ -165,16 +165,19 @@ function csvField(value: string | number): string {
   return s;
 }
 
+export function parseArgs(argv: string[]): { season: string; debug: boolean } {
+  const debug = argv.includes("--debug");
+  const seasonIdx = argv.indexOf("--season");
+  const season = (seasonIdx !== -1 && argv[seasonIdx + 1]) ? argv[seasonIdx + 1] : "2025-26";
+  return { season, debug };
+}
+
 async function main() {
-  const args = process.argv.slice(2);
-  const debug = args.includes("--debug");
+  const { season, debug } = parseArgs(process.argv.slice(2));
   if (debug) process.env.DEBUG = "1";
 
-  const seasonIdx = args.indexOf("--season");
-  if (seasonIdx !== -1 && args[seasonIdx + 1]) {
-    SEASON = args[seasonIdx + 1];
-    SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
-  }
+  SEASON = season;
+  SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
 
   const all = await fetchJson(`${NLS_API.v3}/PyramidApi/Pyramids`, undefined, z.array(PyramidLeagueSchema));
   const leagues = all

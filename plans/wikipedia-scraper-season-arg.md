@@ -21,3 +21,27 @@ In `src/scripts/pyramid-wikipedia.ts`:
 - [ ] `pnpm tsx src/scripts/pyramid-wikipedia.ts --season 2026-27` runs with `2026-27` in all output and lookup logic.
 - [ ] `pnpm build` passes with no TypeScript errors.
 - [ ] Unknown seasons are accepted without error (no validation needed — the value is passed directly to Wikipedia URLs).
+
+## Phase 2 — Extract `parseArgs` and add unit tests
+
+**What to build**
+
+In `src/scripts/pyramid-wikipedia.ts`:
+
+- Extract the arg-parsing block from `main()` into an exported pure function `parseArgs(argv: string[]): { season: string; debug: boolean }`.
+- Replace the inline arg-parsing in `main()` with a call to `parseArgs(process.argv.slice(2))`.
+
+In `src/scripts/pyramid-wikipedia.test.ts` (new file):
+
+- Test `parseArgs` with Vitest covering:
+  - defaults `season` to `"2025-26"` when `--season` is absent
+  - returns the supplied value when `--season 2026-27` is passed
+  - returns the default when `--season` appears with no following value
+  - sets `debug: true` when `--debug` is present
+  - handles `--debug` and `--season` together in either order
+
+**Acceptance criteria**
+
+- [ ] `parseArgs` is exported from `pyramid-wikipedia.ts`.
+- [ ] `pnpm test` passes with all new cases green.
+- [ ] No change to runtime behaviour — `main()` output is identical to Phase 1.
