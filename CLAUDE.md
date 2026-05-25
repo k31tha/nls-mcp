@@ -56,6 +56,27 @@ Copy `.env.example` (or create `.env`) with:
 @agents/docs-agent.md
 @agents/test-agent.md
 
+## Scripts
+
+CLI utilities in `src/scripts/`. Run via `pnpm <script-name>` or directly with `tsx src/scripts/<name>.ts`.
+
+### `pyramid-wikipedia`
+
+Cross-references every active pyramid league against Wikipedia, finds the current-season article, and writes a CSV summary to `pyramid-wikipedia.csv`.
+
+```bash
+pnpm pyramid-wikipedia                        # default: 2025-26
+pnpm pyramid-wikipedia -- --season 2026-27   # override season
+pnpm pyramid-wikipedia -- --debug            # verbose HTTP logging
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--season <value>` | `2025-26` | Season string used in Wikipedia title lookups and output headers |
+| `--debug` | off | Sets `DEBUG=1` for verbose fetch logging |
+
+The season value is passed directly to Wikipedia URL lookups — no validation is applied. Both `YYYY-YY` (hyphen) and `YYYY–YY` (en-dash) variants are checked automatically.
+
 ## NLS API Reference
 
 `docs/NLS.yaml` is the OpenAPI spec for the upstream NLS REST API — the contract that `src/lib/nls/` and `src/server/tools/nls-tools.ts` call against. Check it when adding new tools or tracing a data shape back to its source endpoint.
