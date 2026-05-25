@@ -17,8 +17,8 @@ const PyramidLeagueSchema = z.object({
   wikiPageSection: z.string().nullable(),
 });
 
-const SEASON = "2025-26";
-const SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
+let SEASON = "2025-26";
+let SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
 const STADIA_KEYWORDS = ["stadia", "stadium", "stadiums", "ground", "grounds", "venue", "venues"];
 
 function wikiUrl(title: string): string {
@@ -170,6 +170,12 @@ async function main() {
   const debug = args.includes("--debug");
   if (debug) process.env.DEBUG = "1";
 
+  const seasonIdx = args.indexOf("--season");
+  if (seasonIdx !== -1 && args[seasonIdx + 1]) {
+    SEASON = args[seasonIdx + 1];
+    SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
+  }
+
   const all = await fetchJson(`${NLS_API.v3}/PyramidApi/Pyramids`, undefined, z.array(PyramidLeagueSchema));
   const leagues = all
     .filter((l) => !l.pyramidStepInactive && l.wikipedia !== null)
@@ -186,7 +192,7 @@ async function main() {
     "Step".padEnd(COL_STEP) +
     "League".padEnd(COL_LEAGUE) +
     "Current Wikipedia".padEnd(COL_CURRENT) +
-    "2025-26 Link".padEnd(COL_SEASON) +
+    `${SEASON} Link`.padEnd(COL_SEASON) +
     "Clubs".padEnd(6) +
     "Section".padEnd(35) +
     "First Club";
@@ -223,7 +229,7 @@ async function main() {
         } else {
           const html = await fetchWikipediaPageHtml(league.wikipedia);
           const link = findCurrentSeasonLink(html);
-          seasonLink = link ?? "(no 2025-26 link found)";
+          seasonLink = link ?? `(no ${SEASON} link found)`;
         }
       } catch (err) {
         seasonLink = `ERROR: ${err instanceof Error ? err.message : String(err)}`;
