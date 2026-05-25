@@ -50,6 +50,12 @@ Copy `.env.example` (or create `.env`) with:
 - `MCP_TRANSPORT` — `stdio` (default) or `http`
 - `API_PORT` — port for Express API server (default 3001)
 
+## Agents
+
+@agents/orchestrator.md
+@agents/docs-agent.md
+@agents/test-agent.md
+
 ## NLS API Reference
 
 `docs/NLS.yaml` is the OpenAPI spec for the upstream NLS REST API — the contract that `src/lib/nls/` and `src/server/tools/nls-tools.ts` call against. Check it when adding new tools or tracing a data shape back to its source endpoint.
