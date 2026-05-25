@@ -50,6 +50,10 @@ Copy `.env.example` (or create `.env`) with:
 - `MCP_TRANSPORT` — `stdio` (default) or `http`
 - `API_PORT` — port for Express API server (default 3001)
 
+## NLS API Reference
+
+`docs/NLS.yaml` is the OpenAPI spec for the upstream NLS REST API — the contract that `src/lib/nls/` and `src/server/tools/nls-tools.ts` call against. Check it when adding new tools or tracing a data shape back to its source endpoint.
+
 ## Key Conventions
 
 - ES modules throughout (`"type": "module"` in package.json); use `.js` extensions in imports even for `.ts` source files.
