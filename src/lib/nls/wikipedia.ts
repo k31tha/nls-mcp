@@ -1,5 +1,5 @@
 import { z } from "zod";
-export { extractTextBySelector, extractWikipediaSection, extractClubLeagueFromWikiPage } from "../generic/html-extract.js";
+export { extractTextBySelector, extractWikipediaSection, extractClubLeagueFromWikiPage, extractClubWebsiteFromWikiPage } from "../generic/html-extract.js";
 export type { WikipediaSectionResult, WikipediaLink } from "../generic/html-extract.js";
 
 const WIKIPEDIA_BASE = process.env.WIKIPEDIA_API_URL ?? "https://en.wikipedia.org/api/rest_v1";

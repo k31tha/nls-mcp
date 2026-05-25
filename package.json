@@ -20,6 +20,8 @@
     "wikipedia-check": "tsx src/scripts/wikipedia-check.ts",
     "wikipedia-fix": "tsx src/scripts/wikipedia-fix.ts",
     "wikipedia-club-check": "tsx src/scripts/wikipedia-club-check.ts",
+    "pyramid-wikipedia": "tsx src/scripts/pyramid-wikipedia.ts",
+    "pyramid-wikipedia-clubs": "tsx src/scripts/pyramid-wikipedia-clubs.ts",
     "dev:web": "cd web && npm run dev",
     "start:server:http": "node build/server/http.js"
   },

@@ -121,6 +121,51 @@ export function extractWikipediaSection(html: string, sectionId: string): Wikipe
   return { clubs, paragraphs, tableRows };
 }
 
+export function extractClubWebsiteFromWikiPage(html: string): string | null {
+  const $ = cheerio.load(html);
+
+  // 1. Infobox "Website" row
+  let result: string | null = null;
+  $("table.infobox tr").each((_, row) => {
+    const $row = $(row);
+    if ($row.find("th").text().trim().toLowerCase() === "website") {
+      const href = $row.find("td a").first().attr("href");
+      if (href?.startsWith("http")) {
+        result = href;
+        return false;
+      }
+    }
+  });
+  if (result) return result;
+
+  // 2. External links section — anchor whose text contains "official website"
+  const heading = $("[id='External_links'], [id='External_links_2']").first();
+  if (!heading.length) return null;
+
+  const headingEl = heading.closest("h1,h2,h3,h4,h5,h6");
+  const wrapper = headingEl.closest("div.mw-heading");
+  let sibling = (wrapper.length ? wrapper : headingEl).next();
+  while (sibling.length) {
+    const tag = (sibling.prop("tagName") ?? "").toLowerCase();
+    if (/^h[1-6]$/.test(tag)) break;
+    if (tag === "div" && sibling.hasClass("mw-heading")) break;
+    sibling.find("a[href]").each((_, el) => {
+      const text = $(el).text().trim().toLowerCase();
+      if (text.includes("official website")) {
+        const href = $(el).attr("href");
+        if (href?.startsWith("http")) {
+          result = href;
+          return false;
+        }
+      }
+    });
+    if (result) break;
+    sibling = sibling.next();
+  }
+
+  return result;
+}
+
 export function extractClubLeagueFromWikiPage(html: string): WikipediaLink | null {
   const $ = cheerio.load(html);
   let result: WikipediaLink | null = null;

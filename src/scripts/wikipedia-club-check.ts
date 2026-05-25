@@ -19,10 +19,24 @@ const ClubListSchema = z.object({
   StatusTypeId: z.number().nullable().optional(),
 });
 
+const SocialSchema = z.object({
+  SocialMedia_SocialMediaID: z.number(),
+  SocialURL: z.string(),
+  Active: z.boolean().nullable(),
+});
+
 const ClubDetailSchema = z.object({
   ClubGuid: z.string(),
-  ClubWikiLink: z.string().nullable(),
+  Socials: z.array(SocialSchema).nullable().optional(),
 });
+
+const WIKI_SOCIAL_ID = 10;
+
+function activeWikiUrl(detail: z.infer<typeof ClubDetailSchema>): string | null {
+  return detail.Socials?.find(
+    (s) => s.SocialMedia_SocialMediaID === WIKI_SOCIAL_ID && s.Active === true,
+  )?.SocialURL ?? null;
+}
 
 const PyramidClubSchema = z.object({
   ClubGuid: z.string(),
@@ -50,6 +64,7 @@ type NLSClub = {
   wikiUrl: string | null;
   assignedLeague: string | null;
   assignedStep: number | null;
+  active: boolean | null;
   disableAutoUpdate: boolean;
   nlsStatus: string;
 };
@@ -81,6 +96,7 @@ type Row = {
   wikiClubLeague: string;
   wikiClubLeagueStep: string;
   nlsStatus: string;
+  nlsActive: string;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -119,7 +135,7 @@ function toRow(row: Row): string {
     row.wikiLeague, row.wikiStep, row.wikiClubName, row.wikiClubUrl,
     row.nlsClubName, row.nlsWikiUrl, row.nlsAssignedLeague, row.nlsAssignedStep,
     row.status, row.foundElsewhere, row.disableAutoUpdate, row.wikiClubLeague, row.wikiClubLeagueStep,
-    row.nlsStatus,
+    row.nlsStatus, row.nlsActive,
   ].map(csvField).join(",");
 }
 
@@ -241,6 +257,7 @@ function outerJoin(
         wikiClubLeague: "",
         wikiClubLeagueStep: "",
         nlsStatus: urlMatch.nlsStatus,
+        nlsActive: urlMatch.active === true ? "Y" : urlMatch.active === false ? "N" : "",
       });
       continue;
     }
@@ -269,6 +286,7 @@ function outerJoin(
         foundElsewhere: status !== "MATCHED" ? foundElsewhere(wClub.url, leagueName, nlsUrlIndex) : "",
         disableAutoUpdate: fcMatch.disableAutoUpdate ? "Y" : "",
         wikiClubLeague: "", wikiClubLeagueStep: "", nlsStatus: fcMatch.nlsStatus,
+        nlsActive: fcMatch.active === true ? "Y" : fcMatch.active === false ? "N" : "",
       });
       continue;
     }
@@ -289,6 +307,7 @@ function outerJoin(
         wikiClubLeague: "",
         wikiClubLeagueStep: "",
         nlsStatus: nameMatch.nlsStatus,
+        nlsActive: nameMatch.active === true ? "Y" : nameMatch.active === false ? "N" : "",
       });
       continue;
     }
@@ -314,6 +333,7 @@ function outerJoin(
         foundElsewhere: status !== "MATCHED" ? foundElsewhere(wClub.url, leagueName, nlsUrlIndex) : "",
         disableAutoUpdate: nameFCMatch.disableAutoUpdate ? "Y" : "",
         wikiClubLeague: "", wikiClubLeagueStep: "", nlsStatus: nameFCMatch.nlsStatus,
+        nlsActive: nameFCMatch.active === true ? "Y" : nameFCMatch.active === false ? "N" : "",
       });
       continue;
     }
@@ -328,6 +348,7 @@ function outerJoin(
       wikiClubLeague: "",
       wikiClubLeagueStep: "",
       nlsStatus: "",
+      nlsActive: "",
     });
   }
 
@@ -344,6 +365,7 @@ function outerJoin(
         wikiClubLeague: "",
         wikiClubLeagueStep: "",
         nlsStatus: c.nlsStatus,
+        nlsActive: c.active === true ? "Y" : c.active === false ? "N" : "",
       });
     }
   }
@@ -370,9 +392,9 @@ async function main() {
   }
 
   console.log("Fetching club list...");
-  const rawClubs = await fetchJson(`${NLS_API.v2}/ClubApi/ClubList`, undefined, z.array(ClubListSchema));
-  const activeClubs = rawClubs.filter((c) => c.Active === true);
-  console.log(`  ${activeClubs.length} active clubs`);
+  const allClubs = await fetchJson(`${NLS_API.v2}/ClubApi/ClubList`, undefined, z.array(ClubListSchema));
+  const activeClubs = allClubs.filter((c) => c.Active === true);
+  console.log(`  ${activeClubs.length} active, ${allClubs.length - activeClubs.length} inactive`);
 
   // 2. Fetch pyramid data — used to get wiki links and league assignments
   console.log("Fetching pyramid...");
@@ -394,7 +416,7 @@ async function main() {
   }
 
   // Fetch wiki links for unassigned clubs — they don't appear in pyramid data so guidToWikiUrl misses them
-  const unassignedGuids = activeClubs
+  const unassignedGuids = allClubs
     .filter((c) => {
       const pid = c.PyramidId ? Number(c.PyramidId) : null;
       return !pid || !pyramidIdToLeague.has(pid);
@@ -404,7 +426,8 @@ async function main() {
   for (const guid of unassignedGuids) {
     try {
       const detail = await fetchJson(`${NLS_API.v2}/ClubApi/ClubFullDetailByGuid/${guid}`, undefined, ClubDetailSchema);
-      if (detail.ClubWikiLink) guidToWikiUrl.set(guid, detail.ClubWikiLink);
+      const wikiUrl = activeWikiUrl(detail);
+      if (wikiUrl) guidToWikiUrl.set(guid, wikiUrl);
       process.stdout.write(".");
     } catch {
       process.stdout.write("x");
@@ -412,8 +435,8 @@ async function main() {
   }
   console.log("\n");
 
-  // 3. Build NLS club records
-  const allNlsClubs: NLSClub[] = activeClubs.map((c) => {
+  // 3. Build NLS club records — includes inactive clubs so matching catches recently-inactivated entries
+  const allNlsClubs: NLSClub[] = allClubs.map((c) => {
     const pyramidId = c.PyramidId ? Number(c.PyramidId) : null;
     const league = pyramidId ? pyramidIdToLeague.get(pyramidId) : undefined;
     const statusId = c.StatusTypeId ?? null;
@@ -426,6 +449,7 @@ async function main() {
       wikiUrl: guidToWikiUrl.get(c.ClubGuid) ?? null,
       assignedLeague: league?.leagueName ?? null,
       assignedStep: league?.step ?? null,
+      active: c.Active,
       disableAutoUpdate: c.DisableAutoUpdate === true,
       nlsStatus,
     };
@@ -499,6 +523,7 @@ async function main() {
       wikiClubLeague: "",
       wikiClubLeagueStep: "",
       nlsStatus: club.nlsStatus,
+      nlsActive: club.active === true ? "Y" : club.active === false ? "N" : "",
     });
   }
 
@@ -517,6 +542,7 @@ async function main() {
       wikiClubLeague: "",
       wikiClubLeagueStep: league ? String(league.pyramidStep) : "",
       nlsStatus: club.nlsStatus,
+      nlsActive: club.active === true ? "Y" : club.active === false ? "N" : "",
     });
   }
 
@@ -551,7 +577,7 @@ async function main() {
   }
   console.log("\n");
 
-  const header = "WikiLeague,WikiStep,WikiClubName,WikiClubUrl,NLSClubName,NLSWikiUrl,NLSAssignedLeague,NLSAssignedStep,Status,FoundElsewhere,DisableAutoUpdate,WikiClubLeague,WikiClubLeagueStep,NLSStatus";
+  const header = "WikiLeague,WikiStep,WikiClubName,WikiClubUrl,NLSClubName,NLSWikiUrl,NLSAssignedLeague,NLSAssignedStep,Status,FoundElsewhere,DisableAutoUpdate,WikiClubLeague,WikiClubLeagueStep,NLSStatus,NLSActive";
   writeFileSync(outFile, [header, ...allRows.map(toRow)].join("\n"), "utf8");
 
   const counts = (s: Status) => allRows.filter((r) => r.status === s).length;

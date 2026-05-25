@@ -67,7 +67,9 @@ src/
 │   ├── wikipedia-section.ts CLI — inspect Wikipedia section extraction for a league
 │   ├── wikipedia-check.ts  CLI — bulk-check Wikipedia coverage across all leagues
 │   ├── wikipedia-fix.ts    CLI — auto-fix stale nth-child selectors in pyramid data
-│   └── wikipedia-club-check.ts CLI — cross-reference NLS clubs against Wikipedia; CSV report + bulk actions
+│   ├── wikipedia-club-check.ts CLI — cross-reference NLS clubs against Wikipedia; CSV report + bulk actions
+│   ├── pyramid-wikipedia.ts    CLI — discover 2025-26 season Wikipedia links per pyramid league; outputs pyramid-wikipedia.csv
+│   └── pyramid-wikipedia-clubs.ts CLI — expand pyramid-wikipedia.csv to one row per club with NLS cross-reference; optionally create missing clubs
 └── server/
     ├── nls.ts              MCP Server — NLS tools over stdio
     ├── http.ts             Express app — NLS server over Streamable HTTP
@@ -278,12 +280,14 @@ The loop continues until Claude returns `stop_reason: "end_turn"` with a final t
 | `pnpm wikipedia-check` | Bulk-check Wikipedia club counts vs pyramid counts across all active leagues |
 | `pnpm wikipedia-fix` | Scan all active leagues and auto-fix stale `nth-child` selectors |
 | `pnpm wikipedia-club-check` | Cross-reference all NLS clubs against Wikipedia league pages; outputs a CSV report with optional bulk actions |
+| `pnpm pyramid-wikipedia` | Discover the 2025–26 season Wikipedia page for every active pyramid league and detect the club list section; outputs `pyramid-wikipedia.csv` |
+| `pnpm pyramid-wikipedia-clubs` | Read `pyramid-wikipedia.csv` and expand to one row per club; cross-references each club against NLS data; optionally creates missing clubs with `--add-wiki-only` |
 
 Run any script with `--help` or no arguments for usage details, or see [SAMPLES.md](SAMPLES.md) for examples.
 
 ### wikipedia-club-check
 
-Produces a CSV (`wiki-pyramid-check.csv` by default) cross-referencing every active NLS club against its league's Wikipedia page. Clubs are matched by URL first, then by name, with FC/AFC suffix normalisation at each step.
+Produces a CSV (`wiki-pyramid-check.csv` by default) cross-referencing all NLS clubs (active and inactive) against their league's Wikipedia page. Clubs are matched by URL first, then by name, with FC/AFC suffix normalisation at each step. The `NLSActive` column indicates whether the matched NLS club is currently active.
 
 **Flags**
 
@@ -315,6 +319,56 @@ Produces a CSV (`wiki-pyramid-check.csv` by default) cross-referencing every act
 2. FC-pattern URL match — strips `_A.F.C.`, `A.F.C._`, `_.F.C.`, `F.C._`, `_F.C.` from both sides before comparing
 3. Exact name match — within the assigned league's NLS clubs
 4. FC-suffix name match — strips `A.F.C.`, `F.C.`, `AFC`, `FC` suffixes from both names, searches all NLS clubs
+
+### pyramid-wikipedia
+
+Walks every active pyramid league that has a Wikipedia page configured, resolves the current 2025–26 season article (following infobox "Current:" links and Wikipedia redirects including `#fragment` preservation), then auto-detects the stadia/stadium section that lists each league's clubs.
+
+Shared Wikipedia articles (e.g. National League, NL North, and NL South all resolve to the same page with different `#` fragments) are fetched once and each league is assigned a distinct section.
+
+Outputs **`pyramid-wikipedia.csv`**:
+
+| Column | Description |
+|--------|-------------|
+| `Step` | Pyramid step number |
+| `League` | NLS league name |
+| `CurrentWikipedia` | Wikipedia article URL configured in NLS |
+| `SeasonLink` | Resolved 2025–26 season article URL (may include `#fragment`) |
+| `Clubs` | Number of clubs extracted from the stadia section |
+| `Section` | Heading ID of the stadia section used |
+| `FirstClub` | First club name extracted (sanity check) |
+
+```bash
+pnpm pyramid-wikipedia [--debug]
+```
+
+### pyramid-wikipedia-clubs
+
+Reads `pyramid-wikipedia.csv` (produced by `pyramid-wikipedia`) and expands each league to one row per club. Fetches Wikipedia season pages once per base URL (shared-page leagues share one HTTP request), then cross-references each club against the live NLS data using the same matching rules as `wikipedia-club-check`.
+
+**Matching order** (same priority as `wikipedia-club-check`):
+1. Exact Wikipedia URL match — prefers a club assigned to the same league; if multiple clubs share the URL, picks the one at the lowest pyramid step
+2. FC-pattern URL match — strips `A.F.C.`/`F.C.` variants from both sides before comparing
+3. Exact name match within the league's assigned NLS clubs
+4. Stripped name match (FC suffix removed) across all NLS clubs — lowest step wins
+
+`FoundElsewhere` is left blank.
+
+Outputs **`pyramid-wikipedia-clubs.csv`** with the same column layout as `wiki-pyramid-check.csv`:
+
+`PyramidId, WikiLeague, WikiStep, WikiClubName, WikiClubUrl, NLSClubName, NLSWikiUrl, NLSAssignedLeague, NLSAssignedStep, Status, FoundElsewhere, DisableAutoUpdate, WikiClubLeague, WikiClubLeagueStep, NLSStatus, NLSActive`
+
+**Flags**
+
+| Flag | Description |
+|------|-------------|
+| `--add-wiki-only` | Interactively create an NLS club record for each `WIKI_ONLY` entry (club on Wikipedia but absent from NLS) |
+| `--bulk` | Skip interactive prompts for `--add-wiki-only`; create all automatically |
+| `--debug` | Enable verbose fetch logging |
+
+```bash
+pnpm pyramid-wikipedia-clubs [--add-wiki-only] [--bulk] [--debug]
+```
 
 ## Configuration
 
