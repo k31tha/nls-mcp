@@ -55,6 +55,7 @@ Copy `.env.example` (or create `.env`) with:
 @agents/orchestrator.md
 @agents/docs-agent.md
 @agents/test-agent.md
+@agents/bugfix-agent.md
 
 ## Scripts
 

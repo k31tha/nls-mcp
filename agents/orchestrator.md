@@ -19,7 +19,7 @@ See `plans/completed/nls-club-detail-tools.md` as the reference example.
 
 - Receive a high-level goal (e.g. "add Wikipedia coverage for Step 6 leagues")
 - Decompose it into concrete sub-tasks
-- Assign each sub-task to the right sub-agent (`docs`, `test`)
+- Assign each sub-task to the right sub-agent (`docs`, `test`, `bugfix`)
 - Write the resulting plan to `plans/`
 - Collect results and synthesise a final status report
 - Identify blockers or dependencies between tasks
@@ -37,7 +37,9 @@ See `plans/completed/nls-club-detail-tools.md` as the reference example.
 |-----------|----------|
 | Write or update a README, API doc, or guide | `docs` sub-agent |
 | Write, fix, or extend tests | `test` sub-agent |
-| Task spans both | sequence: `test` first, then `docs` |
+| Diagnose and fix a defect | `bugfix` sub-agent |
+| Bug fix + doc gap revealed | `bugfix` first, then `docs` |
+| Task spans both docs and tests | sequence: `test` first, then `docs` |
 
 ## System prompt
 
