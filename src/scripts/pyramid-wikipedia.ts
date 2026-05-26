@@ -66,7 +66,7 @@ function resolveHref(href: string): string {
   return href.startsWith("http") ? href : `https://en.wikipedia.org${href}`;
 }
 
-function findCurrentSeasonLink(html: string): string | null {
+export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS): string | null {
   const $ = cheerio.load(html);
 
   let found: string | null = null;
@@ -74,8 +74,14 @@ function findCurrentSeasonLink(html: string): string | null {
     if (found) return false;
     const $td = $(td);
     if ($td.text().includes("Current:")) {
-      const href = $td.find("a[href]").first().attr("href") ?? "";
-      if (href) found = resolveHref(href);
+      $td.find("a[href]").each((_, a) => {
+        if (found) return false;
+        const href = $(a).attr("href") ?? "";
+        const text = $(a).text().trim();
+        if (href && seasonVariants.some((v) => text.includes(v))) {
+          found = resolveHref(href);
+        }
+      });
     }
   });
   if (found) return found;
@@ -84,7 +90,7 @@ function findCurrentSeasonLink(html: string): string | null {
     if (found) return false;
     const href = $(el).attr("href") ?? "";
     const text = $(el).text().trim();
-    if (SEASON_VARIANTS.some((v) => text.includes(v))) {
+    if (seasonVariants.some((v) => text.includes(v))) {
       found = resolveHref(href);
     }
   });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs } from "./pyramid-wikipedia.js";
+import { parseArgs, findCurrentSeasonLink } from "./pyramid-wikipedia.js";
 
 describe("parseArgs", () => {
   it("defaults season to 2025-26 when --season is absent", () => {
@@ -28,5 +28,47 @@ describe("parseArgs", () => {
 
   it("handles --season before --debug", () => {
     expect(parseArgs(["--season", "2026-27", "--debug"])).toEqual({ season: "2026-27", debug: true });
+  });
+});
+
+// Minimal Wikipedia infobox HTML fixture
+const infoboxWith = (currentText: string) => `
+  <table class="infobox">
+    <tbody>
+      <tr><td class="infobox-full-data">Current: <a href="/wiki/${currentText.replace(/ /g, "_")}">${currentText}</a></td></tr>
+    </tbody>
+  </table>
+`;
+
+const pageWithLink = (linkText: string, href: string) =>
+  `<html><body><a href="${href}">${linkText}</a></body></html>`;
+
+describe("findCurrentSeasonLink", () => {
+  it("returns the infobox Current link when it matches the season", () => {
+    const html = infoboxWith("2025-26 National League");
+    expect(findCurrentSeasonLink(html, ["2025-26", "2025–26"])).toContain("2025-26_National_League");
+  });
+
+  it("does not return the infobox Current link when it belongs to a different season", () => {
+    const html = infoboxWith("2025-26 National League");
+    // Requesting 2026-27 — infobox still shows 2025-26, should not be returned
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"])).toBeNull();
+  });
+
+  it("falls through to general link scan when infobox does not match the season", () => {
+    const infobox = infoboxWith("2025-26 National League");
+    const bodyLink = `<a href="/wiki/2026-27_National_League">2026-27 National League</a>`;
+    const html = infobox + bodyLink;
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"])).toContain("2026-27_National_League");
+  });
+
+  it("returns null when no link matches the season anywhere on the page", () => {
+    const html = infoboxWith("2025-26 National League");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"])).toBeNull();
+  });
+
+  it("matches en-dash season variant in the general scan", () => {
+    const html = pageWithLink("2026–27 National League", "/wiki/2026%E2%80%9327_National_League");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"])).not.toBeNull();
   });
 });
