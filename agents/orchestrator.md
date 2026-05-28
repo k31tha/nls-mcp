@@ -40,6 +40,7 @@ See `plans/completed/nls-club-detail-tools.md` as the reference example.
 | Diagnose and fix a defect | `bugfix` sub-agent |
 | Bug fix + doc gap revealed | `bugfix` first, then `docs` |
 | Task spans both docs and tests | sequence: `test` first, then `docs` |
+| Answer a question about the codebase | `question` sub-agent |
 
 ## System prompt
 
