@@ -3,5 +3,9 @@
     "allow": [
       "Bash(pnpm test:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "nls"
+  ],
+  "enableAllProjectMcpServers": true
 }
