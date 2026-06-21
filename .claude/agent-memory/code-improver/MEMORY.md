@@ -1,0 +1,1 @@
+- [Apply Medium/High fixes directly](feedback_apply_medium_high.md) — Edit files during review; don't just report findings as suggestions

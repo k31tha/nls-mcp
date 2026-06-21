@@ -1,0 +1,1 @@
+- [vi.doMock + dynamic import test pattern](feedback_test_vi_domock_pattern.md) — Accepted pattern for testing top-level await startup side effects in Express servers

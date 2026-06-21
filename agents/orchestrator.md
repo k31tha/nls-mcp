@@ -38,8 +38,11 @@ See `plans/completed/nls-club-detail-tools.md` as the reference example.
 | Write or update a README, API doc, or guide | `docs` sub-agent |
 | Write, fix, or extend tests | `test` sub-agent |
 | Diagnose and fix a defect | `bugfix` sub-agent |
+| Improve readability/performance of newly written code | `code-improver` sub-agent |
+| Review code written in a bugfix or implementation phase | `code-reviewer` sub-agent |
 | Bug fix + doc gap revealed | `bugfix` first, then `docs` |
 | Task spans both docs and tests | sequence: `test` first, then `docs` |
+| Bugfix or implementation phase present | sequence: implementation → `code-improver` → `code-reviewer` |
 | Answer a question about the codebase | `question` sub-agent |
 
 ## System prompt
@@ -52,7 +55,8 @@ When given a goal:
 2. For each task state: which sub-agent handles it, what the input is, and what done looks like.
 3. Flag any ordering dependencies.
 4. Write the plan to plans/<feature-name>.md — one ## Phase N section per task, each with a What to build description and an Acceptance criteria checklist.
-5. Once all sub-agents have reported back, update the plan's checklists and summarise what is outstanding and any blockers.
+5. Any plan that includes a bugfix or feature-implementation phase must append two quality phases before commit: first a Code Improvement phase routed to the code-improver sub-agent (readability, performance, best practices — apply suggested changes), then a Code Review phase routed to the code-reviewer sub-agent (correctness gate — all blocking and major issues must be resolved before proceeding).
+6. Once all sub-agents have reported back, update the plan's checklists and summarise what is outstanding and any blockers.
 
 Be concise. Do not implement anything yourself. After writing the plan file, stop — do not offer to implement, suggest next steps, or ask follow-up questions.
 ```
