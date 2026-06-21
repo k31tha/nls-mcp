@@ -24,16 +24,22 @@ console.log("[API] Connecting to MCP servers...");
 const gateway = new MultiServerGateway();
 const baseUrl = process.env.MCP_HTTP_BASE_URL ?? "http://localhost:3000";
 
-await gateway.addHttpServer({
-  name: "nls",
-  url: `${baseUrl}/mcp/nls`,
-});
-console.log("[API] NLS server connected.");
+let agent!: Agent;
+try {
+  await gateway.addHttpServer({
+    name: "nls",
+    url: `${baseUrl}/mcp/nls`,
+  });
+  console.log("[API] NLS server connected.");
 
-const agent = new Agent(gateway);
-await agent.initialize();
+  agent = new Agent(gateway);
+  await agent.initialize();
 
-console.log(`[API] Agent ready with ${agent.availableTools.length} tools.`);
+  console.log(`[API] Agent ready with ${agent.availableTools.length} tools.`);
+} catch (error) {
+  console.error("[API] Failed to connect to MCP HTTP server:", error);
+  process.exit(1);
+}
 
 // ── Routes ──────────────────────────────────────────────────
 
@@ -62,7 +68,7 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // ── Start ───────────────────────────────────────────────────
-const PORT = parseInt(process.env.API_PORT ?? "3001", 10);
+const PORT = parseInt(process.env.API_PORT ?? "3001", 10) || 3001;
 app.listen(PORT, () => {
   console.log(`[API] Server listening on http://localhost:${PORT}`);
 });
