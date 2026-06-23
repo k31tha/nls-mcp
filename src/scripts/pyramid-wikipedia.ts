@@ -66,7 +66,7 @@ function resolveHref(href: string): string {
   return href.startsWith("http") ? href : `https://en.wikipedia.org${href}`;
 }
 
-export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS): string | null {
+export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS, wikiTitle?: string): string | null {
   const $ = cheerio.load(html);
 
   let found: string | null = null;
@@ -91,6 +91,7 @@ export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARI
     const href = $(el).attr("href") ?? "";
     const text = $(el).text().trim();
     if (seasonVariants.some((v) => text.includes(v))) {
+      if (wikiTitle && !decodeURIComponent(href).includes(wikiTitle)) return;
       found = resolveHref(href);
     }
   });
@@ -237,7 +238,7 @@ async function main() {
           seasonLink = wikiUrl(candidateTitle);
         } else {
           const html = await fetchWikipediaPageHtml(league.wikipedia);
-          const link = findCurrentSeasonLink(html);
+          const link = findCurrentSeasonLink(html, SEASON_VARIANTS, league.wikipedia);
           seasonLink = link ?? `(no ${SEASON} link found)`;
         }
       } catch (err) {

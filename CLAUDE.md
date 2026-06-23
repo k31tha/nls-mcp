@@ -19,6 +19,7 @@ pnpm dev:web            # Run Vite React frontend
 ```
 
 To run a single test file:
+
 ```bash
 pnpm vitest run src/server/tools/nls-tools.test.ts
 ```
@@ -44,6 +45,7 @@ The codebase has four distinct layers:
 ## Environment Variables
 
 Copy `.env.example` (or create `.env`) with:
+
 - `ANTHROPIC_API_KEY` — required for LLM agent mode
 - `NLS_API_BASE_URL` — NLS REST API base URL
 - `WIKIPEDIA_API_URL` — Wikipedia API endpoint
@@ -72,10 +74,10 @@ pnpm pyramid-wikipedia -- --season 2026-27   # override season
 pnpm pyramid-wikipedia -- --debug            # verbose HTTP logging
 ```
 
-| Flag | Default | Description |
-|------|---------|-------------|
+| Flag               | Default   | Description                                                      |
+| ------------------ | --------- | ---------------------------------------------------------------- |
 | `--season <value>` | `2025-26` | Season string used in Wikipedia title lookups and output headers |
-| `--debug` | off | Sets `DEBUG=1` for verbose fetch logging |
+| `--debug`          | off       | Sets `DEBUG=1` for verbose fetch logging                         |
 
 The season value is passed directly to Wikipedia URL lookups — no validation is applied. Both `YYYY-YY` (hyphen) and `YYYY–YY` (en-dash) variants are checked automatically.
 
