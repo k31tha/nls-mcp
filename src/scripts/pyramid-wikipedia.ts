@@ -91,7 +91,10 @@ export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARI
     const href = $(el).attr("href") ?? "";
     const text = $(el).text().trim();
     if (seasonVariants.some((v) => text.includes(v))) {
-      if (wikiTitle && !decodeURIComponent(href).includes(wikiTitle)) return;
+      if (wikiTitle) {
+        const normalizedTitle = wikiTitle.replace(/ /g, "_");
+        if (!decodeURIComponent(href).includes(normalizedTitle)) return;
+      }
       found = resolveHref(href);
     }
   });
@@ -249,7 +252,12 @@ async function main() {
     // Resolve redirect so seasonLink shows the final URL including any #fragment
     if (seasonLink.startsWith("http")) {
       try {
-        seasonLink = await resolveWikiUrl(seasonLink);
+        const resolved = await resolveWikiUrl(seasonLink);
+        // Reject the resolved URL if it no longer relates to this league's article
+        const normalizedTitle = league.wikipedia.replace(/ /g, "_").toLowerCase();
+        seasonLink = decodeURIComponent(resolved).toLowerCase().includes(normalizedTitle)
+          ? resolved
+          : `(no ${SEASON} link found)`;
       } catch { /* leave seasonLink as-is */ }
     }
 

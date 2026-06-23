@@ -1,7 +1,7 @@
 Step,League,CurrentWikipedia,SeasonLink,Clubs,Section,FirstClub
 1,National League,https://en.wikipedia.org/wiki/National_League_(division),https://en.wikipedia.org/wiki/2026%E2%80%9327_National_League,24,Stadiums_and_locations,AFC Fylde
 2,National League North,https://en.wikipedia.org/wiki/National_League_North,https://en.wikipedia.org/wiki/2026%E2%80%9327_National_League_2_North,0,(not found),
-2,National League South,https://en.wikipedia.org/wiki/National_League_South,"https://en.wikipedia.org#Current_member_clubs,_2026–27",0,(not found),
+2,National League South,https://en.wikipedia.org/wiki/National_League_South,(no 2026-27 link found),,,
 3,Isthmian League,https://en.wikipedia.org/wiki/Isthmian_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Isthmian_League,22,Stadiums_and_locations,AFC Whyteleafe
 3,Northern Premier League,https://en.wikipedia.org/wiki/Northern_Premier_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Northern_Premier_League,22,Stadia_and_locations,Alfreton Town
 3,Southern League Central,https://en.wikipedia.org/wiki/Southern_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Southern_Football_League,22,Stadia_and_locations,Alvechurch
@@ -17,9 +17,9 @@ Step,League,CurrentWikipedia,SeasonLink,Clubs,Section,FirstClub
 5,Combined Counties Football League Premier Division North,https://en.wikipedia.org/wiki/Combined_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Combined_Counties_Football_League,0,(not found),
 5,Combined Counties Football League Premier Division South,https://en.wikipedia.org/wiki/Combined_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Combined_Counties_Football_League,0,(not found),
 5,Eastern Counties Football League Premier Division,https://en.wikipedia.org/wiki/Eastern_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Eastern_Counties_Football_League,20,Stadia_and_locations,Brantham Athletic
-5,Essex Senior Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Essex_Senior_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Essex_Senior_Football_League,20,Stadiums_and_locations,Barking
-5,Hellenic Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Hellenic_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_Hellenic_Football_League&action=edit&redlink=1,error,,
-5,Midland  Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Midland_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_Midland_Football_League&action=edit&redlink=1,error,,
+5,Essex Senior Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Essex_Senior_Football_League,(no 2026-27 link found),,,
+5,Hellenic Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Hellenic_Football_League,(no 2026-27 link found),,,
+5,Midland  Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Midland_Football_League,(no 2026-27 link found),,,
 5,North West Counties Football League Premier Division,https://en.wikipedia.org/wiki/North_West_Counties_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_North_West_Counties_Football_League&action=edit&redlink=1,error,,
 5,Northern Counties East Football League Premier Division,https://en.wikipedia.org/wiki/Northern_Counties_East_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Northern_Counties_East_Football_League,21,Stadia_and_locations,Albion Sports
 5,Northern Football League Division One,https://en.wikipedia.org/wiki/Northern_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Northern_Football_League,22,Stadia_and_locations,Birtley Town
@@ -29,12 +29,12 @@ Step,League,CurrentWikipedia,SeasonLink,Clubs,Section,FirstClub
 5,United Counties Football League Premier Division North,https://en.wikipedia.org/wiki/United_Counties_League,(no 2026-27 link found),,,
 5,United Counties Football League Premier Division South,https://en.wikipedia.org/wiki/United_Counties_League,(no 2026-27 link found),,,
 5,Wessex Football League Premier Division,https://en.wikipedia.org/wiki/Wessex_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Wessex_Football_League,0,(not found),
-5,Western Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Western_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Western_Football_League,0,(not found),
+5,Western Football League Premier Division,https://en.wikipedia.org/wiki/2025–26_Western_Football_League,(no 2026-27 link found),,,
 6,Combined Counties Football League Division One,https://en.wikipedia.org/wiki/Combined_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Combined_Counties_Football_League,0,(not found),
 6,Eastern Counties Football League Division One North,https://en.wikipedia.org/wiki/Eastern_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Eastern_Counties_Football_League,20,Stadia_and_locations_2,AFC Pegasus
 6,Eastern Counties Football League Division One South,https://en.wikipedia.org/wiki/Eastern_Counties_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Eastern_Counties_Football_League,22,Stadia_and_locations_3,AS London
-6,Hellenic Football League Division One,https://en.wikipedia.org/wiki/2025-26_Hellenic_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_Hellenic_Football_League&action=edit&redlink=1,error,,
-6,Midland Football League Division One,https://en.wikipedia.org/wiki/2025–26_Midland_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_Midland_Football_League&action=edit&redlink=1,error,,
+6,Hellenic Football League Division One,https://en.wikipedia.org/wiki/2025-26_Hellenic_Football_League,(no 2026-27 link found),,,
+6,Midland Football League Division One,https://en.wikipedia.org/wiki/2025–26_Midland_Football_League,(no 2026-27 link found),,,
 6,North West Counties Football League Division One North,https://en.wikipedia.org/wiki/North_West_Counties_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_North_West_Counties_Football_League&action=edit&redlink=1,error,,
 6,North West Counties Football League Division One South,https://en.wikipedia.org/wiki/North_West_Counties_Football_League,https://en.wikipedia.org/w/index.php?title=2026%E2%80%9327_North_West_Counties_Football_League&action=edit&redlink=1,error,,
 6,Northern Counties East Football League Division One,https://en.wikipedia.org/wiki/Northern_Counties_East_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Northern_Counties_East_Football_League,22,Stadia_and_locations_2,Appleby Frodingham
@@ -46,4 +46,4 @@ Step,League,CurrentWikipedia,SeasonLink,Clubs,Section,FirstClub
 6,Spartarn South Midlands Football League Division One,https://en.wikipedia.org/wiki/Spartan_South_Midlands_Football_League,(no 2026-27 link found),,,
 6,United Counties Football League Division One,https://en.wikipedia.org/wiki/United_Counties_League,(no 2026-27 link found),,,
 6,Wessex Football League Division One,https://en.wikipedia.org/wiki/Wessex_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Wessex_Football_League,0,(not found),
-6,Western Football League Division One,https://en.wikipedia.org/wiki/2025–26_Western_Football_League,https://en.wikipedia.org/wiki/2026%E2%80%9327_Western_Football_League,0,(not found),
+6,Western Football League Division One,https://en.wikipedia.org/wiki/2025–26_Western_Football_League,(no 2026-27 link found),,,

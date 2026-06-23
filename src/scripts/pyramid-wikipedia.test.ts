@@ -72,14 +72,26 @@ describe("findCurrentSeasonLink", () => {
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"])).not.toBeNull();
   });
 
-  it("rejects a fallback link whose href does not contain the wikiTitle", () => {
+  it("rejects a fallback link whose href does not contain the wikiTitle (underscored)", () => {
     // Simulates the rugby false-positive: page links to "2026–27 National League 2 North"
     // but we are looking for the football "National_League_North" article
     const html = pageWithLink("2026–27 National League 2 North", "/wiki/2026%E2%80%9327_National_League_2_North");
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National_League_North")).toBeNull();
   });
 
-  it("accepts a fallback link whose href contains the wikiTitle", () => {
+  it("rejects a fallback link whose href does not contain the wikiTitle (spaced)", () => {
+    // Same rugby false-positive but wikiTitle provided with spaces (as NLS API may return it)
+    const html = pageWithLink("2026–27 National League 2 North", "/wiki/2026%E2%80%9327_National_League_2_North");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League North")).toBeNull();
+  });
+
+  it("accepts a fallback link whose href contains the wikiTitle (spaced)", () => {
+    // wikiTitle with spaces should still match an underscored href
+    const html = pageWithLink("2026–27 National League North", "/wiki/2026%E2%80%9327_National_League_North");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League North")).toContain("National_League_North");
+  });
+
+  it("accepts a fallback link whose href contains the wikiTitle (underscored)", () => {
     const html = pageWithLink("2026–27 National League North", "/wiki/2026%E2%80%9327_National_League_North");
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National_League_North")).toContain("National_League_North");
   });
