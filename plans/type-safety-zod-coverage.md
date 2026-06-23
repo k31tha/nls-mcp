@@ -12,9 +12,9 @@ In `src/client/gateway.ts`, `callTool` casts `result.content` to an `any`-adjace
 
 ### Acceptance criteria
 
-- [ ] `callTool` in `src/client/gateway.ts` uses a proper type guard instead of a cast
-- [ ] No `any` or implicit `any` remains in the changed code
-- [ ] `pnpm build` passes
+- [x] `callTool` in `src/client/gateway.ts` uses a proper type guard instead of a cast
+- [x] No `any` or implicit `any` remains in the changed code
+- [x] `pnpm build` passes
 
 ---
 
@@ -31,10 +31,10 @@ In `src/server/tools/nls-tools.ts`, the `get_pyramid` tool handler validates inp
 
 ### Acceptance criteria
 
-- [ ] `clubs` field uses `ClubSchema` (or equivalent) instead of `z.unknown()`
-- [ ] API response is validated with Zod before being returned to the caller
-- [ ] Error path on parse failure returns `isError: true` with a descriptive message
-- [ ] `pnpm build` passes
+- [x] `clubs` field uses `ClubSchema` (or equivalent) instead of `z.unknown()`
+- [x] API response is validated with Zod before being returned to the caller
+- [x] Error path on parse failure returns `isError: true` with a descriptive message
+- [x] `pnpm build` passes
 
 ---
 
@@ -48,10 +48,10 @@ In `src/api/server.ts`, the `/api/chat` route performs manual type checking on t
 
 ### Acceptance criteria
 
-- [ ] `/api/chat` request body is validated with a Zod schema
-- [ ] Manual `typeof` / `if` type checks are removed
-- [ ] Invalid request returns HTTP 400 with a JSON error body
-- [ ] `pnpm build` passes
+- [x] `/api/chat` request body is validated with a Zod schema
+- [x] Manual `typeof` / `if` type checks are removed
+- [x] Invalid request returns HTTP 400 with a JSON error body
+- [x] `pnpm build` passes
 
 ---
 
@@ -65,9 +65,9 @@ Review changes from Phases 1–3 across `src/client/gateway.ts`, `src/server/too
 
 ### Acceptance criteria
 
-- [ ] code-improver has reviewed all three changed files
-- [ ] All Medium/High-impact suggestions are applied
-- [ ] `pnpm build` passes
+- [x] code-improver has reviewed all three changed files
+- [x] All Medium/High-impact suggestions are applied
+- [x] `pnpm build` passes
 
 ---
 
@@ -81,7 +81,7 @@ Review all changes from Phases 1–4 for correctness, type safety, and conventio
 
 ### Acceptance criteria
 
-- [ ] code-reviewer has reviewed all changed files
-- [ ] All blocking and major issues are resolved
-- [ ] Full test suite is green
-- [ ] `pnpm build` passes with no TypeScript errors
+- [x] code-reviewer has reviewed all changed files
+- [x] All blocking and major issues are resolved
+- [x] Full test suite is green
+- [x] `pnpm build` passes with no TypeScript errors

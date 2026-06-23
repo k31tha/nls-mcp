@@ -78,7 +78,7 @@ describe("get_pyramid", () => {
   });
 
   it("returns raw JSON on a successful API response", async () => {
-    const fakePyramid = [{ pyramidId: "1", leagueName: "Northern Premier League", pyramidStep: 4, clubs: [] }];
+    const fakePyramid = [{ pyramidId: 1, leagueName: "Northern Premier League", leagueUrl: "northern-premier-league", pyramidStep: 4, pyramidStepInactive: false, wikipedia: "Northern Premier League", wikiPageSection: "", websiteClubsPage: null, clubs: [] }];
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -302,7 +302,7 @@ describe("search_pyramids", () => {
   });
 
   it("returns raw JSON on a successful API response", async () => {
-    const fakeData = [{ pyramidId: 1, leagueName: "Northern Premier League", leagueUrl: "northern-premier-league", pyramidStep: 4, pyramidStepInactive: false, wikipedia: "Northern Premier League", wikiPageSection: "", clubs: [] }];
+    const fakeData = [{ pyramidId: 1, leagueName: "Northern Premier League", leagueUrl: "northern-premier-league", pyramidStep: 4, pyramidStepInactive: false, wikipedia: "Northern Premier League", wikiPageSection: "", websiteClubsPage: null, clubs: [] }];
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({

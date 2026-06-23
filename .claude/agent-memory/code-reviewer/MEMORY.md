@@ -1,1 +1,2 @@
 - [vi.doMock + dynamic import test pattern](feedback_test_vi_domock_pattern.md) — Accepted pattern for testing top-level await startup side effects in Express servers
+- [PyramidLeagueClubSchema websiteClubsPage field](project_pyramid_schema_gap.md) — websiteClubsPage is in the Zod schema but absent from NLS.yaml; field exists in live API, spec is incomplete

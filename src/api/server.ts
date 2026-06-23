@@ -12,6 +12,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { z } from "zod";
 import { MultiServerGateway } from "../client/gateway.js";
 import { Agent } from "../agent/agent.js";
 
@@ -43,6 +44,8 @@ try {
 
 // ── Routes ──────────────────────────────────────────────────
 
+const ChatRequestSchema = z.object({ message: z.string().min(1) });
+
 app.get("/api/tools", (_req, res) => {
   res.json(agent.availableTools);
 });
@@ -53,13 +56,13 @@ app.post("/api/chat/reset", (_req, res) => {
 });
 
 app.post("/api/chat", async (req, res) => {
-  const { message } = req.body;
-  if (!message || typeof message !== "string") {
-    res.status(400).json({ error: "message is required" });
+  const parsed = ChatRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
     return;
   }
   try {
-    const response = await agent.processMessage(message);
+    const response = await agent.processMessage(parsed.data.message);
     res.json(response);
   } catch (error) {
     console.error("[API] Error processing message:", error);

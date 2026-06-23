@@ -22,6 +22,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 
 export interface ToolInfo {
   name: string;
@@ -72,16 +73,18 @@ export class McpGateway {
 
   /**
    * Call a tool on the connected server.
+   * @throws {ZodError} if the server response does not conform to CallToolResultSchema
    */
   async callTool(
     name: string,
     args: Record<string, unknown>,
   ): Promise<string> {
-    const result = await this.client.callTool({ name, arguments: args });
-    const textParts = (result.content as Array<{ type: string; text: string }>)
-      .filter((c) => c.type === "text")
-      .map((c) => c.text);
-    return textParts.join("\n");
+    const raw = await this.client.callTool({ name, arguments: args });
+    const result = CallToolResultSchema.parse(raw);
+    return result.content
+      .filter((c): c is Extract<typeof c, { type: "text" }> => c.type === "text")
+      .map((c) => c.text)
+      .join("\n");
   }
 
   /**

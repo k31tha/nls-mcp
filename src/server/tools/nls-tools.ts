@@ -7,18 +7,6 @@ import { cloneClub } from "../../lib/nls/club-clone.js";
 import { setClubInactive } from "../../lib/nls/club-status.js";
 import { fetchWikipediaPageHtml, extractWikipediaSection } from "../../lib/nls/wikipedia.js";
 
-const PyramidLeagueClubSchema = z.object({
-  pyramidId: z.number(),
-  leagueName: z.string(),
-  leagueUrl: z.string(),
-  pyramidStep: z.number(),
-  pyramidStepInactive: z.boolean(),
-  wikipedia: z.string(),
-  wikiPageSection: z.string(),
-  websiteClubsPage: z.string().nullable(),
-  clubs: z.array(z.unknown()),
-});
-
 const ClubSchema = z.object({
   ClubID: z.number(),
   ClubName: z.string(),
@@ -36,6 +24,18 @@ const ClubSchema = z.object({
   MinorClub: z.boolean().nullable(),
   DisableAutoUpdate: z.boolean().nullable(),
   StatusTypeId: z.number().nullable(),
+});
+
+const PyramidLeagueClubSchema = z.object({
+  pyramidId: z.number(),
+  leagueName: z.string(),
+  leagueUrl: z.string(),
+  pyramidStep: z.number(),
+  pyramidStepInactive: z.boolean(),
+  wikipedia: z.string(),
+  wikiPageSection: z.string(),
+  websiteClubsPage: z.string().nullable(), // present in live API; omitted from NLS.yaml
+  clubs: z.array(ClubSchema),
 });
 
 export function registerNlsTools(server: McpServer): void {
@@ -67,7 +67,7 @@ export function registerNlsTools(server: McpServer): void {
         "Get the full Non League football pyramid. Returns all leagues/divisions (pyramidStep, leagueName) each with their embedded clubs.",
       inputSchema: {},
     },
-    () => apiCall(`${NLS_API.v1}/PyramidApi/GetPyramid`),
+    () => apiCall(`${NLS_API.v1}/PyramidApi/GetPyramid`, undefined, z.array(PyramidLeagueClubSchema)),
   );
 
   server.registerTool(
