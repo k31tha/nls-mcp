@@ -1,2 +1,3 @@
 - [Apply Medium/High fixes directly](feedback_apply_medium_high.md) — Edit files during review; don't just report findings as suggestions
 - [SDK callTool is already typed](project_sdk_callTool_typing.md) — client.callTool() already validates via CallToolResultSchema; don't re-parse; filter needs type predicate to narrow union
+- [pyramid-wikipedia disambiguation normalisation](project_pyramid_wikipedia_disambiguation.md) — `normalizeWikiTitle` helper introduced; both URL-matching sites now use it consistently

@@ -1,11 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm test:*)"
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest *)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "nls"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

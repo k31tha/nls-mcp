@@ -17,8 +17,9 @@ const PyramidLeagueSchema = z.object({
   wikiPageSection: z.string().nullable(),
 });
 
+const EN_DASH = "–";
 let SEASON = "2025-26";
-let SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
+let SEASON_VARIANTS = [SEASON, SEASON.replace("-", EN_DASH)];
 const STADIA_KEYWORDS = ["stadia", "stadium", "stadiums", "ground", "grounds", "venue", "venues"];
 
 function wikiUrl(title: string): string {
@@ -66,6 +67,19 @@ function resolveHref(href: string): string {
   return href.startsWith("http") ? href : `https://en.wikipedia.org${href}`;
 }
 
+/**
+ * Converts a Wikipedia article title to a normalised slug suitable for
+ * substring-matching against decoded href paths. Replaces spaces with
+ * underscores, strips any trailing disambiguation suffix of the form
+ * `_(…)` (e.g. `_(division)`, `_(association_football)`), then lowercases.
+ */
+function normalizeWikiTitle(title: string): string {
+  return title
+    .replace(/ /g, "_")
+    .replace(/_\([^)]+\)$/, "")
+    .toLowerCase();
+}
+
 export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS, wikiTitle?: string): string | null {
   const $ = cheerio.load(html);
 
@@ -92,8 +106,8 @@ export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARI
     const text = $(el).text().trim();
     if (seasonVariants.some((v) => text.includes(v))) {
       if (wikiTitle) {
-        const normalizedTitle = wikiTitle.replace(/ /g, "_");
-        if (!decodeURIComponent(href).includes(normalizedTitle)) return;
+        const normalizedTitle = normalizeWikiTitle(wikiTitle);
+        if (!decodeURIComponent(href).toLowerCase().includes(normalizedTitle)) return;
       }
       found = resolveHref(href);
     }
@@ -187,7 +201,7 @@ async function main() {
   if (debug) process.env.DEBUG = "1";
 
   SEASON = season;
-  SEASON_VARIANTS = [SEASON, SEASON.replace("-", "–26".slice(0, 1))];
+  SEASON_VARIANTS = [SEASON, SEASON.replace("-", EN_DASH)];
 
   const all = await fetchJson(`${NLS_API.v3}/PyramidApi/Pyramids`, undefined, z.array(PyramidLeagueSchema));
   const leagues = all
@@ -254,10 +268,13 @@ async function main() {
       try {
         const resolved = await resolveWikiUrl(seasonLink);
         // Reject the resolved URL if it no longer relates to this league's article
-        const normalizedTitle = league.wikipedia.replace(/ /g, "_").toLowerCase();
-        seasonLink = decodeURIComponent(resolved).toLowerCase().includes(normalizedTitle)
-          ? resolved
-          : `(no ${SEASON} link found)`;
+        const normalizedTitle = normalizeWikiTitle(league.wikipedia);
+        if (decodeURIComponent(resolved).toLowerCase().includes(normalizedTitle)) {
+          seasonLink = resolved;
+        } else {
+          console.warn(`[guard] rejected resolved URL for "${league.leagueName}": ${resolved}`);
+          seasonLink = `(no ${SEASON} link found)`;
+        }
       } catch { /* leave seasonLink as-is */ }
     }
 

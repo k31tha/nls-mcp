@@ -95,4 +95,18 @@ describe("findCurrentSeasonLink", () => {
     const html = pageWithLink("2026–27 National League North", "/wiki/2026%E2%80%9327_National_League_North");
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National_League_North")).toContain("National_League_North");
   });
+
+  it("accepts a fallback link matching the base title when wikiTitle has a disambiguation suffix", () => {
+    // "National League (division)" is the NLS-stored title for the top-level National League.
+    // The season article drops the suffix: 2026-27_National_League — the guard must not reject it.
+    const html = pageWithLink("2026–27 National League", "/wiki/2026%E2%80%9327_National_League");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League (division)")).not.toBeNull();
+  });
+
+  it("still rejects a rugby false-positive when wikiTitle has no disambiguation suffix", () => {
+    // Sanity check: stripping must not widen the guard so far that unrelated articles slip through.
+    // "National League North" has no suffix; "National_League_2_North" must remain rejected.
+    const html = pageWithLink("2026–27 National League 2 North", "/wiki/2026%E2%80%9327_National_League_2_North");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League North")).toBeNull();
+  });
 });
