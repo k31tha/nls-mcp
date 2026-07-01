@@ -1,5 +1,67 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs, findCurrentSeasonLink, resolveHref } from "./pyramid-wikipedia.js";
+import * as cheerio from "cheerio";
+import { parseArgs, findCurrentSeasonLink, resolveHref, findLeagueDivisionSections } from "./pyramid-wikipedia.js";
+
+// Minimal fixture mimicking the 2026-27 Combined Counties Football League page:
+// three division headings each followed by a simple club table.
+const combinedCountiesHtml = `
+  <html><body>
+    <h2 id="Premier_Division_North">Premier Division North</h2>
+    <table><tbody>
+      <tr><td><a href="/wiki/Club_A">Club A</a></td></tr>
+      <tr><td><a href="/wiki/Club_B">Club B</a></td></tr>
+    </tbody></table>
+    <h2 id="Premier_Division_South">Premier Division South</h2>
+    <table><tbody>
+      <tr><td><a href="/wiki/Club_C">Club C</a></td></tr>
+      <tr><td><a href="/wiki/Club_D">Club D</a></td></tr>
+    </tbody></table>
+    <h2 id="Division_One">Division One</h2>
+    <table><tbody>
+      <tr><td><a href="/wiki/Club_E">Club E</a></td></tr>
+      <tr><td><a href="/wiki/Club_F">Club F</a></td></tr>
+    </tbody></table>
+    <h2 id="History">History</h2>
+    <p>Some history text.</p>
+  </body></html>
+`;
+
+describe("findLeagueDivisionSections", () => {
+  const wikiTitle = "Combined_Counties_Football_League";
+
+  it("returns Premier_Division_North for the Premier Division North league", () => {
+    const $ = cheerio.load(combinedCountiesHtml);
+    const result = findLeagueDivisionSections($, "Combined Counties Football League Premier Division North", wikiTitle, new Set());
+    expect(result[0]).toBe("Premier_Division_North");
+  });
+
+  it("returns Premier_Division_South for the Premier Division South league", () => {
+    const $ = cheerio.load(combinedCountiesHtml);
+    const result = findLeagueDivisionSections($, "Combined Counties Football League Premier Division South", wikiTitle, new Set());
+    expect(result[0]).toBe("Premier_Division_South");
+  });
+
+  it("returns Division_One for the Division One league", () => {
+    const $ = cheerio.load(combinedCountiesHtml);
+    // Claim the Premier sections to simulate them having been used already
+    const claimed = new Set(["Premier_Division_North", "Premier_Division_South"]);
+    const result = findLeagueDivisionSections($, "Combined Counties Football League Division One", wikiTitle, claimed);
+    expect(result[0]).toBe("Division_One");
+  });
+
+  it("excludes already-claimed sections from results", () => {
+    const $ = cheerio.load(combinedCountiesHtml);
+    const claimed = new Set(["Premier_Division_North"]);
+    const result = findLeagueDivisionSections($, "Combined Counties Football League Premier Division North", wikiTitle, claimed);
+    expect(result).not.toContain("Premier_Division_North");
+  });
+
+  it("does not return unrelated headings like History", () => {
+    const $ = cheerio.load(combinedCountiesHtml);
+    const result = findLeagueDivisionSections($, "Combined Counties Football League Premier Division North", wikiTitle, new Set());
+    expect(result).not.toContain("History");
+  });
+});
 
 describe("resolveHref", () => {
   it("returns an absolute http URL unchanged", () => {
