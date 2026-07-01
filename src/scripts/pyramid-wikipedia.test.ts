@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { parseArgs, findCurrentSeasonLink } from "./pyramid-wikipedia.js";
+import { parseArgs, findCurrentSeasonLink, resolveHref } from "./pyramid-wikipedia.js";
+
+describe("resolveHref", () => {
+  it("returns an absolute http URL unchanged", () => {
+    expect(resolveHref("https://en.wikipedia.org/wiki/Foo")).toBe("https://en.wikipedia.org/wiki/Foo");
+  });
+
+  it("prepends https: to a protocol-relative URL", () => {
+    expect(resolveHref("//en.wikipedia.org/wiki/Foo")).toBe("https://en.wikipedia.org/wiki/Foo");
+  });
+
+  it("prepends https://en.wikipedia.org to a root-relative path", () => {
+    expect(resolveHref("/wiki/Foo")).toBe("https://en.wikipedia.org/wiki/Foo");
+  });
+});
 
 describe("parseArgs", () => {
   it("defaults season to 2025-26 when --season is absent", () => {
