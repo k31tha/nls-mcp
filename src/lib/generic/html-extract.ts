@@ -109,10 +109,12 @@ export function extractWikipediaSection(html: string, sectionId: string): Wikipe
         if (text) cells.push(text);
       });
       if (cells.length) tableRows.push(cells);
-      // First <td> is the club cell; use full cell text so suffixes like "reserves" are preserved
-      const firstCell = $(row).find("td:first-child").first();
-      const anchor = firstCell.find("a").first();
-      const name = firstCell.text().trim();
+      // Use the first <td> that contains a link — the club cell regardless of
+      // whether the table has a leading position-number column.
+      const clubCell = $(row).find("td").filter((_, td) => $(td).find("a").length > 0).first();
+      if (!clubCell.length) return;
+      const anchor = clubCell.find("a").first();
+      const name = clubCell.text().trim();
       const href = anchor.attr("href") ?? "";
       if (name) clubs.push({ name, url: resolveWikiHref(href) });
     });

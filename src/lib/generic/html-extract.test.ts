@@ -169,6 +169,50 @@ describe("extractWikipediaSection — section ID mode", () => {
   });
 });
 
+describe("extractWikipediaSection — division-style tables (position number in first column)", () => {
+  const divisionTableHtml = `
+    <html><body>
+      <h2 id="Premier_Division_North">Premier Division North</h2>
+      <table><tbody>
+        <tr><th>#</th><th>Club</th><th>Town</th></tr>
+        <tr><td>1</td><td><a href="/wiki/Club_A">Club A</a></td><td>Town A</td></tr>
+        <tr><td>2</td><td><a href="/wiki/Club_B">Club B</a></td><td>Town B</td></tr>
+        <tr><td>3</td><td><a href="/wiki/Club_C">Club C</a></td><td>Town C</td></tr>
+      </tbody></table>
+    </body></html>
+  `;
+
+  const noLinkRowHtml = `
+    <html><body>
+      <h2 id="Clubs">Clubs</h2>
+      <table><tbody>
+        <tr><td>Notes row with no link</td></tr>
+        <tr><td><a href="/wiki/Club_A">Club A</a></td></tr>
+      </tbody></table>
+    </body></html>
+  `;
+
+  it("returns club names from the linked column, not the position-number column", () => {
+    const { clubs } = extractWikipediaSection(divisionTableHtml, "Premier_Division_North");
+
+    expect(clubs[0].name).toBe("Club A");
+    expect(clubs[0].url).toBe("https://en.wikipedia.org/wiki/Club_A");
+  });
+
+  it("counts only rows that have a linked cell", () => {
+    const { clubs } = extractWikipediaSection(divisionTableHtml, "Premier_Division_North");
+
+    expect(clubs).toHaveLength(3);
+  });
+
+  it("skips rows with no linked cell", () => {
+    const { clubs } = extractWikipediaSection(noLinkRowHtml, "Clubs");
+
+    expect(clubs).toHaveLength(1);
+    expect(clubs[0].name).toBe("Club A");
+  });
+});
+
 describe("extractWikipediaSection — CSS selector mode", () => {
   const selectorHtml = `
     <html><body>
