@@ -111,7 +111,7 @@ export function extractWikipediaSection(html: string, sectionId: string): Wikipe
       if (cells.length) tableRows.push(cells);
       // Use the first <td> that contains a link — the club cell regardless of
       // whether the table has a leading position-number column.
-      const clubCell = $(row).find("td").filter((_, td) => $(td).find("a").length > 0).first();
+      const clubCell = $(row).find("td, th").filter((_, cell) => $(cell).find("a").length > 0).first();
       if (!clubCell.length) return;
       const anchor = clubCell.find("a").first();
       const name = clubCell.text().trim();
