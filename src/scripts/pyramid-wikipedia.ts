@@ -48,7 +48,7 @@ async function resolveWikiUrl(url: string): Promise<string> {
     const html = await res.text();
     const $ = cheerio.load(html);
     const href = $(".redirectText a, .mw-parser-output .redirectMsg a").first().attr("href");
-    if (href) return href.startsWith("http") ? href : `https://en.wikipedia.org${href}`;
+    if (href) return resolveHref(href);
   } catch { /* fall through */ }
   return url;
 }
@@ -63,8 +63,10 @@ async function checkWikiPageExists(title: string): Promise<boolean> {
   }
 }
 
-function resolveHref(href: string): string {
-  return href.startsWith("http") ? href : `https://en.wikipedia.org${href}`;
+export function resolveHref(href: string): string {
+  if (href.startsWith("http")) return href;
+  if (href.startsWith("//")) return `https:${href}`;
+  return `https://en.wikipedia.org${href}`;
 }
 
 /**
