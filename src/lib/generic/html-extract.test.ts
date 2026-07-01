@@ -205,6 +205,23 @@ describe("extractWikipediaSection — division-style tables (position number in 
     expect(clubs).toHaveLength(3);
   });
 
+  it("returns club name from a th[scope=row] cell (Wikipedia standings table pattern)", () => {
+    const standingsHtml = `
+      <html><body>
+        <h2 id="Premier_Division_North">Premier Division North</h2>
+        <table><tbody>
+          <tr><th>Pos</th><th>Club</th><th>P</th></tr>
+          <tr><td>1</td><th scope="row"><a href="/wiki/Club_A">Club A</a></th><td>38</td></tr>
+          <tr><td>2</td><th scope="row"><a href="/wiki/Club_B">Club B</a></th><td>35</td></tr>
+        </tbody></table>
+      </body></html>
+    `;
+    const { clubs } = extractWikipediaSection(standingsHtml, "Premier_Division_North");
+
+    expect(clubs).toHaveLength(2);
+    expect(clubs[0].name).toBe("Club A");
+  });
+
   it("skips rows with no linked cell", () => {
     const { clubs } = extractWikipediaSection(noLinkRowHtml, "Clubs");
 
