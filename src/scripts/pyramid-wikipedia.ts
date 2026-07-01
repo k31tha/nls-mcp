@@ -180,6 +180,37 @@ function findStadiaSections(
   return scored.sort((a, b) => b.score - a.score).map(({ id }) => id);
 }
 
+// Returns heading IDs whose text matches the division portion of leagueName,
+// scored by token overlap, excluding already-claimed sections.
+export function findLeagueDivisionSections(
+  $: cheerio.CheerioAPI,
+  leagueName: string,
+  wikiTitle: string,
+  usedSections: Set<string>,
+): string[] {
+  const normalizedTitle = wikiTitle.replace(/_/g, " ").toLowerCase();
+  const normalizedLeague = leagueName.toLowerCase();
+  const divisionLabel = normalizedLeague.startsWith(normalizedTitle)
+    ? leagueName.slice(normalizedTitle.length).trim()
+    : leagueName;
+
+  const tokens = divisionLabel.toLowerCase().split(/\s+/).filter((w) => w.length >= 3);
+  if (tokens.length === 0) return [];
+
+  const allHeadings = collectHeadings($);
+  const scored = allHeadings
+    .filter(({ id }) => !usedSections.has(id))
+    .map(({ id }) => {
+      const normalized = decodeURIComponent(id).replace(/_/g, " ").toLowerCase();
+      const score = tokens.filter((t) => normalized.includes(t)).length;
+      return { id, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.map(({ id }) => id);
+}
+
 function findClubsInSection(html: string, sectionId: string): { count: number; first: string } {
   const { clubs } = extractWikipediaSection(html, sectionId);
   return { count: clubs.length, first: clubs[0]?.name ?? "" };
@@ -312,7 +343,23 @@ async function main() {
           }
         }
 
-        // Fallback: configured section (if not already claimed)
+        // Intermediate fallback: try division-name sections before the NLS-configured section
+        if (!found) {
+          const divisionCandidates = findLeagueDivisionSections($, league.leagueName, league.wikipedia, claimed);
+          for (const id of divisionCandidates) {
+            const { count, first } = findClubsInSection(html, id);
+            if (count > 0) {
+              clubsCol = String(count);
+              sectionCol = id;
+              firstClub = first;
+              claimSection(cacheKey, id);
+              found = true;
+              break;
+            }
+          }
+        }
+
+        // Final fallback: configured section (if not already claimed)
         if (!found && !claimed.has(league.wikiPageSection)) {
           const { count, first } = findClubsInSection(html, league.wikiPageSection);
           if (count > 0) {
