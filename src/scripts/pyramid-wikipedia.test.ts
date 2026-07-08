@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import * as cheerio from "cheerio";
-import { parseArgs, findCurrentSeasonLink, resolveHref, findLeagueDivisionSections } from "./pyramid-wikipedia.js";
+import {
+  parseArgs,
+  findCurrentSeasonLink,
+  resolveHref,
+  findLeagueDivisionSections,
+  previousSeasonVariants,
+  rewriteSeasonInUrl,
+  rewritePreviousSeasonLink,
+} from "./pyramid-wikipedia.js";
 
 // Minimal fixture mimicking the 2026-27 Combined Counties Football League page:
 // three division headings each followed by a simple club table.
@@ -184,5 +192,92 @@ describe("findCurrentSeasonLink", () => {
     // "National League North" has no suffix; "National_League_2_North" must remain rejected.
     const html = pageWithLink("2026–27 National League 2 North", "/wiki/2026%E2%80%9327_National_League_2_North");
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League North")).toBeNull();
+  });
+});
+
+describe("previousSeasonVariants", () => {
+  it("returns hyphen and en-dash variants of the previous season", () => {
+    expect(previousSeasonVariants("2026-27")).toEqual(["2025-26", "2025–26"]);
+  });
+
+  it("accepts an en-dash season string", () => {
+    expect(previousSeasonVariants("2026–27")).toEqual(["2025-26", "2025–26"]);
+  });
+
+  it("handles the century boundary", () => {
+    expect(previousSeasonVariants("2100-01")).toEqual(["2099-00", "2099–00"]);
+  });
+
+  it("returns an empty array for a malformed season string", () => {
+    expect(previousSeasonVariants("next-season")).toEqual([]);
+  });
+});
+
+describe("rewriteSeasonInUrl", () => {
+  const prev = ["2025-26", "2025–26"];
+
+  it("rewrites a hyphenated season keeping the hyphen", () => {
+    expect(rewriteSeasonInUrl("https://en.wikipedia.org/wiki/2025-26_United_Counties_League", prev, "2026-27"))
+      .toBe("https://en.wikipedia.org/wiki/2026-27_United_Counties_League");
+  });
+
+  it("rewrites an en-dash season keeping the en-dash", () => {
+    expect(rewriteSeasonInUrl("https://en.wikipedia.org/wiki/2025–26_United_Counties_League", prev, "2026-27"))
+      .toBe("https://en.wikipedia.org/wiki/2026–27_United_Counties_League");
+  });
+
+  it("rewrites a percent-encoded en-dash season keeping the encoding", () => {
+    expect(rewriteSeasonInUrl("https://en.wikipedia.org/wiki/2025%E2%80%9326_United_Counties_League", prev, "2026-27"))
+      .toBe("https://en.wikipedia.org/wiki/2026%E2%80%9327_United_Counties_League");
+  });
+
+  it("preserves a #fragment", () => {
+    expect(rewriteSeasonInUrl("https://en.wikipedia.org/wiki/2025–26_National_League#National_League_North", prev, "2026-27"))
+      .toBe("https://en.wikipedia.org/wiki/2026–27_National_League#National_League_North");
+  });
+
+  it("returns null when the URL contains no previous-season variant", () => {
+    expect(rewriteSeasonInUrl("https://en.wikipedia.org/wiki/National_League_North", prev, "2026-27")).toBeNull();
+  });
+});
+
+describe("rewritePreviousSeasonLink", () => {
+  // Mimics the National_League_North article: infobox "Current:" still points at 2025–26
+  const staleInfoboxHtml = `
+    <table class="infobox">
+      <tbody>
+        <tr><td class="infobox-full-data">Current: <a href="//en.wikipedia.org/wiki/2025–26_National_League#National_League_North">2025–26 National League North</a></td></tr>
+      </tbody>
+    </table>
+  `;
+
+  it("rewrites a previous-season Current link when the target page exists", async () => {
+    const result = await rewritePreviousSeasonLink(staleInfoboxHtml, "National_League_North", "2026-27", async () => true);
+    expect(result).toBe("https://en.wikipedia.org/wiki/2026–27_National_League#National_League_North");
+  });
+
+  it("verifies existence using the decoded title without the fragment", async () => {
+    const checked: string[] = [];
+    await rewritePreviousSeasonLink(staleInfoboxHtml, "National_League_North", "2026-27", async (title) => {
+      checked.push(title);
+      return true;
+    });
+    expect(checked).toEqual(["2026–27_National_League"]);
+  });
+
+  it("returns null when the rewritten page does not exist", async () => {
+    const result = await rewritePreviousSeasonLink(staleInfoboxHtml, "National_League_North", "2026-27", async () => false);
+    expect(result).toBeNull();
+  });
+
+  it("returns null when the page has no previous-season link", async () => {
+    const html = infoboxWith("2024-25 National League");
+    const result = await rewritePreviousSeasonLink(html, "National_League_North", "2026-27", async () => true);
+    expect(result).toBeNull();
+  });
+
+  it("returns null for a malformed season string", async () => {
+    const result = await rewritePreviousSeasonLink(staleInfoboxHtml, "National_League_North", "next-season", async () => true);
+    expect(result).toBeNull();
   });
 });

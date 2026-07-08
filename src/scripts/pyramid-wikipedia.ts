@@ -82,6 +82,53 @@ function normalizeWikiTitle(title: string): string {
     .toLowerCase();
 }
 
+// "2026-27" → ["2025-26", "2025–26"]; [] when the season string does not parse
+export function previousSeasonVariants(season: string): string[] {
+  const m = /^(\d{4})[-–]\d{2}$/.exec(season);
+  if (!m) return [];
+  const startYear = parseInt(m[1], 10) - 1;
+  const prev = `${startYear}-${String(startYear + 1).slice(-2)}`;
+  return [prev, prev.replace("-", EN_DASH)];
+}
+
+const ENCODED_EN_DASH = "%E2%80%93";
+
+// Replace the previous-season substring in a Wikipedia URL with the target season,
+// preserving the original separator style (hyphen, en-dash, or percent-encoded
+// en-dash) and any #fragment. Returns null when no variant occurs in the URL.
+export function rewriteSeasonInUrl(url: string, prevVariants: string[], targetSeason: string): string | null {
+  for (const prev of prevVariants) {
+    const candidates: Array<[string, string]> = [
+      [prev, prev.includes(EN_DASH) ? targetSeason.replace("-", EN_DASH) : targetSeason],
+      [prev.replace(/[-–]/, ENCODED_EN_DASH), targetSeason.replace("-", ENCODED_EN_DASH)],
+    ];
+    for (const [from, to] of candidates) {
+      if (url.includes(from)) return url.replace(from, to);
+    }
+  }
+  return null;
+}
+
+// Fallback for articles whose "Current:" link still points at the previous season:
+// rewrite that link to the requested season and use it if the page exists.
+export async function rewritePreviousSeasonLink(
+  html: string,
+  wikiTitle: string,
+  season: string,
+  pageExists: (title: string) => Promise<boolean> = checkWikiPageExists,
+): Promise<string | null> {
+  const prevVariants = previousSeasonVariants(season);
+  if (prevVariants.length === 0) return null;
+  const prevLink = findCurrentSeasonLink(html, prevVariants, wikiTitle);
+  if (!prevLink) return null;
+  const rewritten = rewriteSeasonInUrl(prevLink, prevVariants, season);
+  if (!rewritten) return null;
+  const { base } = parseWikiUrl(rewritten);
+  const title = decodeURIComponent(base.split("/wiki/")[1] ?? "");
+  if (!title || !(await pageExists(title))) return null;
+  return rewritten;
+}
+
 export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS, wikiTitle?: string): string | null {
   const $ = cheerio.load(html);
 
@@ -288,7 +335,8 @@ async function main() {
           seasonLink = wikiUrl(candidateTitle);
         } else {
           const html = await fetchWikipediaPageHtml(league.wikipedia);
-          const link = findCurrentSeasonLink(html, SEASON_VARIANTS, league.wikipedia);
+          const link = findCurrentSeasonLink(html, SEASON_VARIANTS, league.wikipedia)
+            ?? await rewritePreviousSeasonLink(html, league.wikipedia, SEASON);
           seasonLink = link ?? `(no ${SEASON} link found)`;
         }
       } catch (err) {
@@ -307,6 +355,17 @@ async function main() {
         } else {
           console.warn(`[guard] rejected resolved URL for "${league.leagueName}": ${resolved}`);
           seasonLink = `(no ${SEASON} link found)`;
+          // The rejected URL may have come from a stale redirect (e.g. a hyphen
+          // title redirecting to an unrelated article). Retry via the article's
+          // previous-season "Current:" link before giving up.
+          const html = await fetchWikipediaPageHtml(league.wikipedia);
+          const recovered = await rewritePreviousSeasonLink(html, league.wikipedia, SEASON);
+          if (recovered) {
+            const reResolved = await resolveWikiUrl(recovered);
+            if (decodeURIComponent(reResolved).toLowerCase().includes(normalizedTitle)) {
+              seasonLink = reResolved;
+            }
+          }
         }
       } catch { /* leave seasonLink as-is */ }
     }
