@@ -129,6 +129,12 @@ export async function rewritePreviousSeasonLink(
   return rewritten;
 }
 
+// Red links point at articles that do not exist yet
+// (e.g. "…?action=edit&redlink=1"); they must never be used as season links.
+function isRedlinkHref(href: string): boolean {
+  return href.includes("redlink=1") || href.includes("action=edit");
+}
+
 export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARIANTS, wikiTitle?: string): string | null {
   const $ = cheerio.load(html);
 
@@ -141,7 +147,7 @@ export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARI
         if (found) return false;
         const href = $(a).attr("href") ?? "";
         const text = $(a).text().trim();
-        if (href && seasonVariants.some((v) => text.includes(v))) {
+        if (href && !isRedlinkHref(href) && seasonVariants.some((v) => text.includes(v))) {
           found = resolveHref(href);
         }
       });
@@ -153,7 +159,7 @@ export function findCurrentSeasonLink(html: string, seasonVariants = SEASON_VARI
     if (found) return false;
     const href = $(el).attr("href") ?? "";
     const text = $(el).text().trim();
-    if (seasonVariants.some((v) => text.includes(v))) {
+    if (href && !isRedlinkHref(href) && seasonVariants.some((v) => text.includes(v))) {
       if (wikiTitle) {
         const normalizedTitle = normalizeWikiTitle(wikiTitle);
         if (!decodeURIComponent(href).toLowerCase().includes(normalizedTitle)) return;
