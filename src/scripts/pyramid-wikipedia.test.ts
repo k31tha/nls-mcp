@@ -193,6 +193,29 @@ describe("findCurrentSeasonLink", () => {
     const html = pageWithLink("2026–27 National League 2 North", "/wiki/2026%E2%80%9327_National_League_2_North");
     expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "National League North")).toBeNull();
   });
+
+  it("skips an infobox Current red link to a not-yet-created season article", () => {
+    // Mimics the Hellenic Football League page: infobox already links the next
+    // season, but the article does not exist yet (redlink)
+    const html = `
+      <table class="infobox"><tbody>
+        <tr><td class="infobox-full-data">Current: <a href="/wiki/2026–27_Hellenic_Football_League?action=edit&amp;redlink=1" class="new">2026–27 season</a></td></tr>
+      </tbody></table>
+    `;
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "Hellenic_Football_League")).toBeNull();
+  });
+
+  it("skips a red link in the general scan", () => {
+    const html = pageWithLink("2026–27 Hellenic Football League", "/w/index.php?title=2026%E2%80%9327_Hellenic_Football_League&action=edit&redlink=1");
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "Hellenic_Football_League")).toBeNull();
+  });
+
+  it("still returns a valid link when a red link appears earlier on the page", () => {
+    const redlink = `<a href="/wiki/2026–27_Hellenic_Football_League?action=edit&redlink=1">2026–27 season</a>`;
+    const bluelink = `<a href="/wiki/2026%E2%80%9327_Hellenic_Football_League">2026–27 Hellenic Football League</a>`;
+    const html = `<html><body>${redlink}${bluelink}</body></html>`;
+    expect(findCurrentSeasonLink(html, ["2026-27", "2026–27"], "Hellenic_Football_League")).toContain("Hellenic_Football_League");
+  });
 });
 
 describe("previousSeasonVariants", () => {
