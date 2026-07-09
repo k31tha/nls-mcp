@@ -81,6 +81,26 @@ pnpm pyramid-wikipedia -- --debug            # verbose HTTP logging
 
 The season value is passed directly to Wikipedia URL lookups — no validation is applied. Both `YYYY-YY` (hyphen) and `YYYY–YY` (en-dash) variants are checked automatically.
 
+### `pyramid-wikipedia-clubs`
+
+Reads `pyramid-wikipedia.csv` (rows whose `SeasonLink` is a URL and whose `Section` resolved — sentinel rows are skipped), extracts each league's club table from the season article, matches every club against NLS by wiki URL and name, and writes one row per club to `pyramid-wikipedia-clubs.csv` with a `Status` of `MATCHED`, `MATCHED_WRONG_LEAGUE`, `MATCHED_UNASSIGNED`, or `WIKI_ONLY`.
+
+```bash
+pnpm pyramid-wikipedia-clubs                              # report only
+pnpm pyramid-wikipedia-clubs -- --add-wiki-only           # interactively create WIKI_ONLY clubs in NLS
+pnpm pyramid-wikipedia-clubs -- --fix-wrong-league        # interactively reassign MATCHED_WRONG_LEAGUE clubs
+pnpm pyramid-wikipedia-clubs -- --fix-wrong-league --bulk # reassign without prompting
+```
+
+| Flag                 | Description                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `--add-wiki-only`    | After the report, create each `WIKI_ONLY` club in NLS via `AddClub` + `AddClubSocial`                          |
+| `--fix-wrong-league` | After the report, reassign each `MATCHED_WRONG_LEAGUE` club to its Wikipedia league via `UpdateClubPyramid`    |
+| `--bulk`             | Skip the per-club y/n/q prompt for either write mode                                                            |
+| `--debug`            | Sets `DEBUG=1` for verbose fetch logging                                                                        |
+
+`--fix-wrong-league` never moves clubs with `DisableAutoUpdate` set; in `--bulk` mode it also skips inactive clubs and clubs whose target league is ambiguous (the same club wrong-league under two leagues). It reassigns the *existing* NLS club — for a reserve/B team that is genuinely a different entity sharing the first team's wiki page, use `wikipedia-club-check --clone` instead, which creates a new club.
+
 ## NLS API Reference
 
 `docs/NLS.yaml` is the OpenAPI spec for the upstream NLS REST API — the contract that `src/lib/nls/` and `src/server/tools/nls-tools.ts` call against. Check it when adding new tools or tracing a data shape back to its source endpoint.
