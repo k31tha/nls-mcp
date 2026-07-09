@@ -11,7 +11,7 @@ Plans are written to `plans/<feature-name>.md` using the same structure as exist
 - Each phase has a **What to build** description and an **Acceptance criteria** checklist
 - Phases are ordered so each one can be completed and verified independently
 
-Active plans live in `plans/`. When all acceptance criteria are met, move the file to `plans/completed/` — that folder is the permanent history.
+Active plans live in `plans/`. When all acceptance criteria are met, the plan moves to `plans/completed/` — that folder is the permanent history. The move ships inside the implementation PR itself (a `/implement` step includes `git mv plans/<name>.md plans/completed/`), so the plan is archived at the moment the PR merges; the orchestrator does not move plan files separately.
 
 See `plans/completed/nls-club-detail-tools.md` as the reference example.
 
