@@ -162,6 +162,69 @@ type MatchStatus = "MATCHED" | "MATCHED_WRONG_LEAGUE" | "MATCHED_UNASSIGNED" | "
 
 type WikiOnlyClub = { pyramidId: number | string; leagueName: string; step: number; name: string; url: string };
 
+export type WrongLeagueCandidate = {
+  guid: string;
+  clubName: string;
+  fromLeague: string | null;
+  fromStep: number | null;
+  toLeague: string;
+  toStep: number;
+  toPyramidId: number | string;
+  disableAutoUpdate: boolean;
+  active: boolean | null;
+};
+
+// Partitions MATCHED_WRONG_LEAGUE candidates into those safe to reassign and
+// those to skip (with a reason). Duplicate (guid, target league) pairs are
+// collapsed to one. In bulk mode, ambiguous targets (same club wrong-league
+// under two different leagues) and inactive clubs are skipped; interactively
+// the user decides at the prompt. DisableAutoUpdate clubs are never eligible.
+export function selectWrongLeagueFixes(
+  candidates: WrongLeagueCandidate[],
+  opts: { bulk: boolean },
+): { eligible: WrongLeagueCandidate[]; skipped: Array<{ candidate: WrongLeagueCandidate; reason: string }> } {
+  const eligible: WrongLeagueCandidate[] = [];
+  const skipped: Array<{ candidate: WrongLeagueCandidate; reason: string }> = [];
+
+  const targetsByGuid = new Map<string, Set<string>>();
+  for (const c of candidates) {
+    const targets = targetsByGuid.get(c.guid) ?? new Set<string>();
+    targets.add(c.toLeague);
+    targetsByGuid.set(c.guid, targets);
+  }
+
+  const seen = new Set<string>();
+  for (const c of candidates) {
+    const key = `${c.guid}|${c.toLeague}`;
+    if (seen.has(key)) {
+      skipped.push({ candidate: c, reason: "duplicate row for the same target league" });
+      continue;
+    }
+    seen.add(key);
+
+    if (c.disableAutoUpdate) {
+      skipped.push({ candidate: c, reason: "DisableAutoUpdate is set" });
+      continue;
+    }
+    if (typeof c.toPyramidId !== "number") {
+      skipped.push({ candidate: c, reason: `no pyramidId found for "${c.toLeague}"` });
+      continue;
+    }
+    const targets = targetsByGuid.get(c.guid)!;
+    if (opts.bulk && targets.size > 1) {
+      skipped.push({ candidate: c, reason: `ambiguous target — club is wrong-league under ${targets.size} leagues` });
+      continue;
+    }
+    if (opts.bulk && c.active !== true) {
+      skipped.push({ candidate: c, reason: "club is not active" });
+      continue;
+    }
+    eligible.push(c);
+  }
+
+  return { eligible, skipped };
+}
+
 function normalizeClubName(name: string): string {
   return name.replace(/\s*&\s*/g, " and ").trim();
 }
@@ -327,6 +390,7 @@ async function main() {
   const HEADER = "PyramidId,WikiLeague,WikiStep,WikiClubName,WikiClubUrl,NLSClubName,NLSWikiUrl,NLSAssignedLeague,NLSAssignedStep,Status,FoundElsewhere,DisableAutoUpdate,WikiClubLeague,WikiClubLeagueStep,NLSStatus,NLSActive";
   const outputRows: string[] = [HEADER];
   const wikiOnlyClubs: WikiOnlyClub[] = [];
+  const wrongLeagueClubs: WrongLeagueCandidate[] = [];
   const urlToMinStep = new Map<string, number>(); // tracks lowest pyramid step seen for each wiki URL
 
   const htmlCache = new Map<string, string>();
@@ -365,6 +429,20 @@ async function main() {
 
         if (status === "WIKI_ONLY") wikiOnlyClubs.push({ pyramidId, leagueName: League, step: clubStep, name: club.name, url: club.url });
 
+        if (status === "MATCHED_WRONG_LEAGUE" && match) {
+          wrongLeagueClubs.push({
+            guid: match.guid,
+            clubName: match.name,
+            fromLeague: match.assignedLeague,
+            fromStep: match.assignedStep,
+            toLeague: League,
+            toStep: clubStep,
+            toPyramidId: pyramidId,
+            disableAutoUpdate: match.disableAutoUpdate,
+            active: match.active,
+          });
+        }
+
         outputRows.push([
           pyramidId,
           League,
@@ -399,17 +477,30 @@ async function main() {
   console.log(`WIKI_ONLY: ${wikiOnlyClubs.length}`);
 
   const doAdd = args.includes("--add-wiki-only");
+  const doFixWrongLeague = args.includes("--fix-wrong-league");
   const bulk = args.includes("--bulk");
 
-  if (!doAdd) return;
+  if (!doAdd && !doFixWrongLeague) return;
 
+  const rl = !bulk ? createInterface({ input: process.stdin, output: process.stdout }) : null;
+  const ask = (q: string) => new Promise<string>((resolve) => rl!.question(q, resolve));
+
+  if (doAdd) await addWikiOnlyClubs(wikiOnlyClubs, urlToMinStep, bulk, ask);
+  if (doFixWrongLeague) await fixWrongLeagueClubs(wrongLeagueClubs, bulk, ask);
+
+  rl?.close();
+}
+
+async function addWikiOnlyClubs(
+  wikiOnlyClubs: WikiOnlyClub[],
+  urlToMinStep: Map<string, number>,
+  bulk: boolean,
+  ask: (q: string) => Promise<string>,
+) {
   if (!wikiOnlyClubs.length) {
     console.log("\nNo WIKI_ONLY clubs to add.");
     return;
   }
-
-  const rl = !bulk ? createInterface({ input: process.stdin, output: process.stdout }) : null;
-  const ask = (q: string) => new Promise<string>((resolve) => rl!.question(q, resolve));
 
   console.log(`\n${wikiOnlyClubs.length} WIKI_ONLY clubs. Add each to NLS?\n`);
 
@@ -501,8 +592,67 @@ async function main() {
       console.log(`    ✗ Failed: ${e instanceof Error ? e.message : e}`);
     }
   }
+}
 
-  rl?.close();
+async function fixWrongLeagueClubs(
+  wrongLeagueClubs: WrongLeagueCandidate[],
+  bulk: boolean,
+  ask: (q: string) => Promise<string>,
+) {
+  const { eligible, skipped } = selectWrongLeagueFixes(wrongLeagueClubs, { bulk });
+
+  if (skipped.length) {
+    console.log(`\n${skipped.length} MATCHED_WRONG_LEAGUE rows skipped:`);
+    for (const { candidate, reason } of skipped) {
+      console.log(`  [skip] ${candidate.clubName} (${candidate.fromLeague ?? "unassigned"} → ${candidate.toLeague}): ${reason}`);
+    }
+  }
+
+  if (!eligible.length) {
+    console.log("\nNo MATCHED_WRONG_LEAGUE clubs eligible for reassignment.");
+    return;
+  }
+
+  // Same club eligible under more than one target league (interactive mode only)
+  const guidCount = new Map<string, number>();
+  for (const c of eligible) guidCount.set(c.guid, (guidCount.get(c.guid) ?? 0) + 1);
+
+  console.log(`\n${eligible.length} MATCHED_WRONG_LEAGUE clubs. Reassign each to its Wikipedia league?\n`);
+
+  const ClubIdSchema = z.object({ ClubID: z.number() });
+
+  for (const club of eligible) {
+    const move = `${club.fromLeague ?? "(unassigned)"} (step ${club.fromStep ?? "?"}) → ${club.toLeague} (step ${club.toStep})`;
+
+    if (!bulk) {
+      const flags = [
+        club.active !== true ? "INACTIVE" : null,
+        (guidCount.get(club.guid) ?? 0) > 1 ? "ALSO LISTED UNDER ANOTHER LEAGUE" : null,
+      ].filter(Boolean).join(", ");
+      const answer = await ask(`  Reassign "${club.clubName}"${flags ? ` [${flags}]` : ""}: ${move}? (y/n/q): `);
+      if (answer.toLowerCase() === "q") break;
+      if (answer.toLowerCase() !== "y") continue;
+    } else {
+      console.log(`  Reassigning "${club.clubName}": ${move}...`);
+    }
+
+    try {
+      const detail = await fetchJson(
+        `${NLS_API.v2}/ClubApi/ClubFullDetailByGuid/${club.guid}`,
+        undefined,
+        ClubIdSchema,
+      );
+      const res = await fetch(`${NLS_API.v1}/ClubApi/UpdateClubPyramid`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pyramidId: club.toPyramidId, clubId: detail.ClubID }),
+      });
+      if (!res.ok) throw new Error(`UpdateClubPyramid returned ${res.status} ${res.statusText}`);
+      console.log(`    ✓ "${club.clubName}" reassigned: ${move}`);
+    } catch (e) {
+      console.log(`    ✗ Failed: ${e instanceof Error ? e.message : e}`);
+    }
+  }
 }
 
 main().catch((err: unknown) => {
