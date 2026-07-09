@@ -4,6 +4,7 @@ import { createInterface } from "readline";
 import { fetchJson } from "../lib/generic/fetch-json.js";
 import { NLS_API } from "../lib/nls/config.js";
 import { fetchWikipediaPageHtmlByUrl, extractWikipediaSection, extractClubWebsiteFromWikiPage } from "../lib/nls/wikipedia.js";
+import { updateClubPyramid } from "../lib/nls/club-pyramid.js";
 import { z } from "zod";
 
 const IN_FILE = "pyramid-wikipedia.csv";
@@ -619,9 +620,10 @@ async function fixWrongLeagueClubs(
 
   console.log(`\n${eligible.length} MATCHED_WRONG_LEAGUE clubs. Reassign each to its Wikipedia league?\n`);
 
-  const ClubIdSchema = z.object({ ClubID: z.number() });
-
   for (const club of eligible) {
+    // selectWrongLeagueFixes only passes numeric pyramid ids through; narrow for TS
+    if (typeof club.toPyramidId !== "number") continue;
+
     const move = `${club.fromLeague ?? "(unassigned)"} (step ${club.fromStep ?? "?"}) → ${club.toLeague} (step ${club.toStep})`;
 
     if (!bulk) {
@@ -637,17 +639,7 @@ async function fixWrongLeagueClubs(
     }
 
     try {
-      const detail = await fetchJson(
-        `${NLS_API.v2}/ClubApi/ClubFullDetailByGuid/${club.guid}`,
-        undefined,
-        ClubIdSchema,
-      );
-      const res = await fetch(`${NLS_API.v1}/ClubApi/UpdateClubPyramid`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pyramidId: club.toPyramidId, clubId: detail.ClubID }),
-      });
-      if (!res.ok) throw new Error(`UpdateClubPyramid returned ${res.status} ${res.statusText}`);
+      await updateClubPyramid(club.guid, club.toPyramidId);
       console.log(`    ✓ "${club.clubName}" reassigned: ${move}`);
     } catch (e) {
       console.log(`    ✗ Failed: ${e instanceof Error ? e.message : e}`);

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fetchJson } from "../generic/fetch-json.js";
 import { NLS_API } from "./config.js";
+import { updateClubPyramid } from "./club-pyramid.js";
 
 const SourceClubSchema = z.object({
   ClubID: z.number(),
@@ -144,12 +145,9 @@ export async function cloneClub(
     });
   }
 
-  if (pyramidId !== undefined) {
-    await fetch(`${NLS_API.v1}/ClubApi/UpdateClubPyramid`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pyramidId, clubId }),
-    });
+  if (pyramidId !== undefined && clubGuid) {
+    // UpdateClubPyramid is broken server-side; updateClubPyramid goes via EditClub
+    await updateClubPyramid(clubGuid, pyramidId);
   }
 
   return { success: true, newClubId: clubId, newClubGuid: clubGuid, alreadyExisted };

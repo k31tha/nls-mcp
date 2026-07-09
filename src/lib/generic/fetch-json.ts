@@ -36,7 +36,8 @@ export async function fetchJson<T = unknown>(
   if (!response.ok) {
     const bodyText = await response.text().catch(() => "(could not read body)");
     log("  error body:", bodyText.slice(0, 1000));
-    throw new HttpError(response.status, `${response.status} ${response.statusText} — ${method} ${url}`);
+    const bodySnippet = bodyText.trim() ? ` — ${bodyText.trim().slice(0, 300)}` : "";
+    throw new HttpError(response.status, `${response.status} ${response.statusText} — ${method} ${url}${bodySnippet}`);
   }
 
   const raw = await response.json();
