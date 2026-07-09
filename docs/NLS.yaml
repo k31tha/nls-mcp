@@ -189,6 +189,12 @@ paths:
   /api/ClubApi/UpdateClubPyramid:
     post:
       summary: Update club pyramid assignment
+      description: >-
+        KNOWN BROKEN (as of 2026-07): every call fails with HTTP 500 — an
+        Entity Framework "multiple instances of IEntityChangeTracker" error in
+        ClubBLL.UpdateClubPyramidId, regardless of payload. To change a club's
+        PyramidId, use POST /api/v2/ClubApi/EditClub with the full ClubEntity
+        (PyramidId as string); see src/lib/nls/club-pyramid.ts.
       requestBody:
         required: true
         content:
