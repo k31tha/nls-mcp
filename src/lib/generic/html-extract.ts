@@ -14,6 +14,10 @@ const WIKIPEDIA_ORIGIN = "https://en.wikipedia.org";
 
 function resolveWikiHref(href: string): string {
   if (href.startsWith("http")) return href;
+  // Parsoid HTML uses protocol-relative (//en.wikipedia.org/wiki/X) and
+  // page-relative (./X) hrefs — both must resolve before the plain "/" case
+  if (href.startsWith("//")) return `https:${href}`;
+  if (href.startsWith("./")) return `${WIKIPEDIA_ORIGIN}/wiki/${href.slice(2)}`;
   if (href.startsWith("/")) return `${WIKIPEDIA_ORIGIN}${href}`;
   return href;
 }
