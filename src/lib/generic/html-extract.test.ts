@@ -129,6 +129,38 @@ describe("extractWikipediaSection — section ID mode", () => {
     expect(clubs).toHaveLength(1);
   });
 
+  it("resolves every Parsoid href form to a single-base absolute URL", () => {
+    // The four anchor forms Wikipedia HTML serves: absolute, root-relative,
+    // protocol-relative (the double-base bug), and Parsoid page-relative
+    const html = `
+      <html><body>
+        <h2 id="Clubs">Clubs</h2>
+        <table><tbody>
+          <tr><td><a href="https://en.wikipedia.org/wiki/Absolute_FC">Absolute FC</a></td></tr>
+          <tr><td><a href="/wiki/Root_Relative_FC">Root Relative FC</a></td></tr>
+          <tr><td><a href="//en.wikipedia.org/wiki/AFC_Fylde">AFC Fylde</a></td></tr>
+          <tr><td><a href="./Page_Relative_FC">Page Relative FC</a></td></tr>
+        </tbody></table>
+      </body></html>
+    `;
+    const { clubs } = extractWikipediaSection(html, "Clubs");
+
+    expect(clubs.map((c) => c.url)).toEqual([
+      "https://en.wikipedia.org/wiki/Absolute_FC",
+      "https://en.wikipedia.org/wiki/Root_Relative_FC",
+      "https://en.wikipedia.org/wiki/AFC_Fylde",
+      "https://en.wikipedia.org/wiki/Page_Relative_FC",
+    ]);
+  });
+
+  it("does not produce a double base for protocol-relative hrefs", () => {
+    const html = `<html><body><h2 id="Clubs">Clubs</h2><table><tbody><tr><td><a href="//en.wikipedia.org/wiki/AFC_Fylde">AFC Fylde</a></td></tr></tbody></table></body></html>`;
+    const { clubs } = extractWikipediaSection(html, "Clubs");
+
+    expect(clubs[0].url).not.toContain("en.wikipedia.org//en.wikipedia.org");
+    expect(clubs[0].url).toBe("https://en.wikipedia.org/wiki/AFC_Fylde");
+  });
+
   it("stops collecting nodes at the next same-level heading", () => {
     const { paragraphs } = extractWikipediaSection(flatSectionHtml, "Clubs");
 
